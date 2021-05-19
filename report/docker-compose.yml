@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  build:
+    build: .
+    volumes:
+      - '.:/report'
+    working_dir: '/report'
+    command: 'make'
