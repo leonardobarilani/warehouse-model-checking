@@ -68,14 +68,18 @@ def run_query(qpp):
 		sys.exit(1)
 
 	out = res.stdout.decode()
-	assert 'Formula is satisfied' in out
+
+	if 'Formula is satisfied' not in out:
+		eprint('[ERROR] Formula not satisfied?')
+		eprint('[ERROR] ' + '\n[ERROR] '.join(out.splitlines()))
+		assert False
 
 	matches = VERIFYTA_REGEX.findall(out)
 
 	if not matches:
 		eprint('[ERROR] Regexp matching failed:')
-		eprint('[ERROR] ' + '\n[ERROR] '.join(res.stdout.decode().splitlines()))
-		sys.exit(1)
+		eprint('[ERROR] ' + '\n[ERROR] '.join(out.splitlines()))
+		assert False
 
 	return variable_params, tuple(map(float, matches[0][1:]))
 
@@ -276,7 +280,7 @@ DEFAULT_PARAMS = {
 N_WORKERS            = os.cpu_count()
 VERIFYTA_EXE_PATH    = '/home/marco/Downloads/Chrome/uppaal64-4.1.24/bin-Linux/verifyta'
 VERIFYTA_REGEX       = re.compile(r'Pr\((<>|\[\]) \.\.\.\) in \[([\d.e-]+),([\d.e-]+)\]')
-VERIFYTA_UNCERTAINTY = '0.1'
+VERIFYTA_UNCERTAINTY = '0.5'
 
 ################################################################################
 
