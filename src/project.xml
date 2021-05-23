@@ -98,7 +98,7 @@ int cell_is_free(pos_t p) {
 }</declaration>
 	<template>
 		<name x="5" y="5">TaskGenerator</name>
-		<parameter>const int mean, const int variance, const int n_pods</parameter>
+		<parameter>const int mean, const int variance</parameter>
 		<declaration>const int u_min = (mean - variance) / 3;
 const int u_max = (mean + variance) / 3;
 clock x;</declaration>
@@ -125,10 +125,9 @@ clock x;</declaration>
 			<source ref="id2"/>
 			<target ref="id0"/>
 			<label kind="select" x="-289" y="-93">pod_id: pod_t</label>
-			<label kind="guard" x="-289" y="-76">pods[pod_id] == POD_FREE
-&amp;&amp; cell_is_free(pod_position[pod_id])</label>
-			<label kind="synchronisation" x="-289" y="-42">asap!</label>
-			<label kind="assignment" x="-289" y="-25">enqueue(pod_id), x = 0</label>
+			<label kind="guard" x="-289" y="-76">pods[pod_id] == POD_FREE &amp;&amp; cell_is_free(pod_position[pod_id])</label>
+			<label kind="synchronisation" x="-289" y="-59">asap!</label>
+			<label kind="assignment" x="-289" y="-42">enqueue(pod_id), x = 0</label>
 			<nail x="144" y="-102"/>
 			<nail x="-25" y="-102"/>
 			<nail x="-306" y="-102"/>
@@ -196,8 +195,8 @@ clock x;</declaration>
 		<transition>
 			<source ref="id8"/>
 			<target ref="id6"/>
-			<label kind="synchronisation" x="42" y="-110">delivery_ready?</label>
-			<label kind="assignment" x="68" y="-93">x = 0</label>
+			<label kind="synchronisation" x="34" y="-110">delivery_ready?</label>
+			<label kind="assignment" x="34" y="-93">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id5"/>
@@ -274,17 +273,16 @@ clock x;</declaration>
 	<template>
 		<name>Bot</name>
 		<parameter>const bot_t id</parameter>
-		<declaration>const int K = BOT_STEP_TIME;
-clock x;
+		<declaration>clock x;
 
-pos_t pos = ENTRY_POS;
-pod_t target_pod_id = 0;
+pos_t pos            = ENTRY_POS;
+pod_t target_pod_id  = 0;
 pos_t target_pod_pos = {-1, -1};
 
 // Try to step, return 1 if success, 0 if blocked by another bot
-void commit_step(pos_t newpos) {
+void maybe_step(pos_t newpos) {
     if (cell_is_free(newpos)) {
-        if (pos != newpos) // At map entry we have pos == newpos
+        if (pos != newpos) // At map entry we have pos == newpos, avoid this edge case
             map[pos.r][pos.c] -= B;
 
         map[newpos.r][newpos.c] |= B;
@@ -293,7 +291,7 @@ void commit_step(pos_t newpos) {
 }
 
 void enter_map() {
-    commit_step(ENTRY_POS);
+    maybe_step(ENTRY_POS);
 }
 
 void get_task() {
@@ -329,7 +327,7 @@ void step_towards_entry() {
         step(c, newpos);
     }
 
-    commit_step(newpos);
+    maybe_step(newpos);
 }
 
 void step_towards_human() {
@@ -344,7 +342,7 @@ void step_towards_human() {
         step(c, newpos);
     }
 
-    commit_step(newpos);
+    maybe_step(newpos);
 }
 
 void step_towards_pod() {
@@ -368,116 +366,116 @@ void step_towards_pod() {
         step(c, newpos);
     }
 
-    commit_step(newpos);
+    maybe_step(newpos);
 }
 </declaration>
-		<location id="id13" x="-348" y="-17">
+		<location id="id13" x="-416" y="-17">
 		</location>
-		<location id="id14" x="-255" y="-17">
-			<name x="-323" y="-8">WAIT_FIRST_TASK</name>
+		<location id="id14" x="-314" y="-17">
+			<name x="-374" y="-8">WAIT_FIRST_TASK</name>
 		</location>
-		<location id="id15" x="-136" y="153">
-			<name x="-153" y="162">RESET</name>
-			<label kind="invariant" x="-153" y="179">x &lt;= K</label>
+		<location id="id15" x="-136" y="187">
+			<name x="-153" y="195">RESET</name>
+			<label kind="invariant" x="-187" y="212">x &lt;= BOT_STEP_TIME</label>
 		</location>
 		<location id="id16" x="93" y="-17">
 			<name x="0" y="-17">REACH_POD</name>
-			<label kind="invariant" x="42" y="0">x &lt;= K</label>
+			<label kind="invariant" x="-68" y="0">x &lt;= BOT_STEP_TIME</label>
 		</location>
-		<location id="id17" x="288" y="-17">
-			<name x="306" y="-34">REACH_HUMAN</name>
-			<label kind="invariant" x="306" y="-17">x &lt;= K</label>
+		<location id="id17" x="340" y="-17">
+			<name x="358" y="-34">REACH_HUMAN</name>
+			<label kind="invariant" x="358" y="-17">x &lt;= BOT_STEP_TIME</label>
 		</location>
-		<location id="id18" x="-136" y="-17">
-			<name x="-161" y="-8">ENTER</name>
+		<location id="id18" x="-178" y="-17">
+			<name x="-203" y="-8">ENTER</name>
 		</location>
-		<location id="id19" x="289" y="153">
-			<name x="212" y="162">RETURN_POD</name>
-			<label kind="invariant" x="263" y="179">x &lt;= K</label>
+		<location id="id19" x="341" y="187">
+			<name x="264" y="196">RETURN_POD</name>
+			<label kind="invariant" x="229" y="212">x &lt;= BOT_STEP_TIME</label>
 		</location>
-		<location id="id20" x="85" y="153">
-			<name x="68" y="162">IDLE</name>
-			<label kind="exponentialrate" x="25" y="179">BOT_IDLE_EXP_RATE</label>
+		<location id="id20" x="85" y="187">
+			<name x="68" y="196">IDLE</name>
+			<label kind="exponentialrate" x="25" y="213">BOT_IDLE_EXP_RATE</label>
 		</location>
-		<location id="id21" x="289" y="68">
+		<location id="id21" x="340" y="93">
 		</location>
 		<init ref="id13"/>
 		<transition>
 			<source ref="id21"/>
 			<target ref="id19"/>
-			<label kind="synchronisation" x="297" y="85">human_done?</label>
-			<label kind="assignment" x="297" y="102">x = 0</label>
+			<label kind="synchronisation" x="349" y="119">human_done?</label>
+			<label kind="assignment" x="349" y="136">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id19"/>
 			<target ref="id19"/>
-			<label kind="guard" x="340" y="127">pos != target_pod_pos
-&amp;&amp; x &gt;= K</label>
-			<label kind="assignment" x="340" y="162">step_towards_pod(), x = 0</label>
-			<nail x="331" y="136"/>
-			<nail x="331" y="170"/>
+			<label kind="guard" x="392" y="161">pos != target_pod_pos
+&amp;&amp; x &gt;= BOT_STEP_TIME</label>
+			<label kind="assignment" x="392" y="196">step_towards_pod(), x = 0</label>
+			<nail x="383" y="170"/>
+			<nail x="383" y="204"/>
 		</transition>
 		<transition>
 			<source ref="id20"/>
 			<target ref="id15"/>
-			<label kind="guard" x="-51" y="93">!queue_empty()</label>
-			<label kind="synchronisation" x="-51" y="110">asap!</label>
-			<label kind="assignment" x="-51" y="127">get_task(), x = 0</label>
-			<nail x="16" y="153"/>
+			<label kind="guard" x="-51" y="127">!queue_empty()</label>
+			<label kind="synchronisation" x="-51" y="144">asap!</label>
+			<label kind="assignment" x="-51" y="161">get_task(), x = 0</label>
+			<nail x="16" y="187"/>
 		</transition>
 		<transition>
 			<source ref="id19"/>
 			<target ref="id20"/>
-			<label kind="guard" x="119" y="94">pos == target_pod_pos</label>
-			<label kind="synchronisation" x="119" y="111">asap!</label>
-			<label kind="assignment" x="119" y="128">end_task()</label>
+			<label kind="guard" x="119" y="128">pos == target_pod_pos</label>
+			<label kind="synchronisation" x="119" y="145">asap!</label>
+			<label kind="assignment" x="119" y="162">end_task()</label>
 		</transition>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id21"/>
-			<label kind="guard" x="297" y="8">pos == HUMAN_POS</label>
-			<label kind="synchronisation" x="297" y="25">delivery_ready!</label>
-			<nail x="289" y="26"/>
-			<nail x="289" y="42"/>
+			<label kind="guard" x="348" y="25">pos == HUMAN_POS</label>
+			<label kind="synchronisation" x="348" y="42">delivery_ready!</label>
+			<nail x="341" y="26"/>
+			<nail x="341" y="76"/>
 		</transition>
 		<transition>
 			<source ref="id18"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-119" y="-76">cell_is_free(ENTRY_POS)</label>
-			<label kind="synchronisation" x="-119" y="-59">asap!</label>
-			<label kind="assignment" x="-119" y="-42">enter_map(), x = 0</label>
-			<nail x="-17" y="-17"/>
+			<label kind="guard" x="-144" y="-76">cell_is_free(ENTRY_POS)</label>
+			<label kind="synchronisation" x="-144" y="-59">asap!</label>
+			<label kind="assignment" x="-144" y="-42">enter_map(), x = 0</label>
+			<nail x="-59" y="-17"/>
 		</transition>
 		<transition>
 			<source ref="id15"/>
 			<target ref="id15"/>
-			<label kind="guard" x="-331" y="128">pos != ENTRY_POS
-&amp;&amp; x &gt;= K</label>
-			<label kind="assignment" x="-357" y="162">step_towards_entry(), x = 0</label>
-			<nail x="-187" y="161"/>
-			<nail x="-187" y="136"/>
+			<label kind="guard" x="-374" y="161">pos != ENTRY_POS
+&amp;&amp; x &gt;= BOT_STEP_TIME</label>
+			<label kind="assignment" x="-382" y="195">step_towards_entry(), x = 0</label>
+			<nail x="-187" y="195"/>
+			<nail x="-187" y="170"/>
 		</transition>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id17"/>
-			<label kind="guard" x="272" y="-119">pos != HUMAN_POS
-&amp;&amp; x &gt;= K</label>
-			<label kind="assignment" x="271" y="-85">step_towards_human(), x = 0</label>
-			<nail x="271" y="-59"/>
-			<nail x="305" y="-59"/>
+			<label kind="guard" x="324" y="-119">pos != HUMAN_POS
+&amp;&amp; x &gt;= BOT_STEP_TIME</label>
+			<label kind="assignment" x="323" y="-85">step_towards_human(), x = 0</label>
+			<nail x="323" y="-59"/>
+			<nail x="357" y="-59"/>
 		</transition>
 		<transition>
 			<source ref="id16"/>
 			<target ref="id17"/>
-			<label kind="guard" x="119" y="-42">pos == target_pod_pos</label>
-			<label kind="synchronisation" x="119" y="-17">asap!</label>
-			<label kind="assignment" x="119" y="0">x = 0</label>
+			<label kind="guard" x="119" y="-17">pos == target_pod_pos</label>
+			<label kind="synchronisation" x="119" y="0">asap!</label>
+			<label kind="assignment" x="119" y="17">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id16"/>
 			<target ref="id16"/>
 			<label kind="guard" x="76" y="-119">pos != target_pod_pos
-&amp;&amp; x &gt;= K</label>
+&amp;&amp; x &gt;= BOT_STEP_TIME</label>
 			<label kind="assignment" x="76" y="-85">step_towards_pod(), x = 0</label>
 			<nail x="76" y="-59"/>
 			<nail x="110" y="-59"/>
@@ -485,29 +483,29 @@ void step_towards_pod() {
 		<transition>
 			<source ref="id15"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-127" y="51">pos == ENTRY_POS</label>
-			<label kind="synchronisation" x="-127" y="68">asap!</label>
-			<label kind="assignment" x="-127" y="85">x = 0</label>
-			<nail x="-136" y="42"/>
-			<nail x="-102" y="42"/>
-			<nail x="93" y="42"/>
+			<label kind="guard" x="-280" y="68">pos == ENTRY_POS</label>
+			<label kind="synchronisation" x="-178" y="85">asap!</label>
+			<label kind="assignment" x="-178" y="102">x = 0</label>
+			<nail x="-136" y="59"/>
+			<nail x="-102" y="59"/>
+			<nail x="93" y="59"/>
 			<nail x="93" y="17"/>
 		</transition>
 		<transition>
 			<source ref="id14"/>
 			<target ref="id18"/>
-			<label kind="guard" x="-238" y="-76">!queue_empty()</label>
-			<label kind="synchronisation" x="-238" y="-59">asap!</label>
-			<label kind="assignment" x="-238" y="-42">get_task()</label>
+			<label kind="guard" x="-289" y="-76">!queue_empty()</label>
+			<label kind="synchronisation" x="-289" y="-59">asap!</label>
+			<label kind="assignment" x="-289" y="-42">get_task()</label>
 		</transition>
 		<transition>
 			<source ref="id13"/>
 			<target ref="id14"/>
-			<label kind="synchronisation" x="-331" y="-42">init_done?</label>
+			<label kind="synchronisation" x="-399" y="-42">init_done?</label>
 		</transition>
 	</template>
 	<system>initializer = Initializer();
-generator   = TaskGenerator(TASK_GEN_MEAN, TASK_GEN_VAR, N_PODS);
+generator   = TaskGenerator(TASK_GEN_MEAN, TASK_GEN_VAR);
 human       = Human(HUMAN_MEAN, HUMAN_VAR);
 
 system initializer, generator, human, Bot;
