@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-	<declaration>// Global parameters
+	<declaration>// Global system parameters
 const int N_BOTS            = {N_BOTS};
 const int N_POD_ROWS        = {N_POD_ROWS};
 const int N_PODS_PER_ROW    = {N_PODS_PER_ROW};
@@ -14,7 +14,7 @@ const int BOT_IDLE_EXP_RATE = {BOT_IDLE_EXP_RATE};
 const int BOT_STEP_TIME     = {BOT_STEP_TIME};
 const int TAU               = {TAU};
 
-// Global constants
+// Global *derived* system parameters
 const int QUEUE_SIZE = QUEUE_CAPACITY + 1;
 const int N_PODS     = N_POD_ROWS * N_PODS_PER_ROW;
 const int MAP_H      = N_POD_ROWS * 2 + 1;
@@ -25,45 +25,46 @@ typedef int[0, N_BOTS - 1] bot_t;
 typedef int[0, N_PODS - 1] pod_t;
 typedef struct {{ int r, c; }} pos_t;
 
-// Global special values
+// Global constants
 const pos_t ENTRY_POS = {{ 0, 1 }};
 const pos_t HUMAN_POS = {{ 0, 0 }};
-const int POD_FREE = 0;
-const int POD_BUSY = 1;
-const int NONE = -1;
-const int N =  1; // North
-const int S =  2; // South
-const int E =  4; // East
-const int W =  8; // West
-const int X = 16; // Crossing
-const int B = 32; // Bot present
-const int P = 64; // Pod present
+const int POD_FREE    = 0;
+const int POD_BUSY    = 1;
+const int NONE        = -1;
+const int N           =  1; // North
+const int S           =  2; // South
+const int E           =  4; // East
+const int W           =  8; // West
+const int X           = 16; // Crossing
+const int B           = 32; // Bot present
+const int P           = 64; // Pod present
 
 // Global counters
 int tasks_lost = 0;      // n. of tasks lost because the queue was full
 int tasks_completed = 0; // n. of tasks succesfully completed (pickup + delivery + return)
 
-int map[MAP_H][MAP_W];
-
+// All defined channels
 urgent broadcast chan asap;           // dummy urgent channel to complete actions as soon as possible
+urgent broadcast chan step;           // synchronize bot movements to help bots stuck in line to move as soon as possible
 urgent broadcast chan init_done;      // signal everyone that global vars are initialized
 urgent broadcast chan human_done;     // notify currently delivering bot that human finished their job
 urgent broadcast chan delivery_ready; // notify human that bot just arrived to deliver a pod
 
-// Status of pods: each pod can either be FREE or BUSY
-int pods[N_PODS];
-int free_pods = N_PODS; // n. of currently free pods
-// Positions of pods (coords), only generated once during initialization
-pos_t pod_position[N_PODS];
-
-// Task queue (implemented as a ring buffer)
-int queue[QUEUE_SIZE];
+// Global variables
+int map[MAP_H][MAP_W];      // warehouse map
+int pods[N_PODS];           // status of pods: each pod can either be FREE or BUSY
+int free_pods = N_PODS;     // n. of currently free pods (not assigned as a task to any bot)
+pos_t pod_position[N_PODS]; // positions of pods (coords), only generated once during initialization
+int queue[QUEUE_SIZE];      // task FIFO queue (implemented as a ring buffer)
 int queue_head = 0;
 int queue_tail = 0;
 
 /*************** Global utility functions *****************/
 
-// Add one task to the queue, if full the task gets lost
+/*
+ * Add one task to the queue. If the queue is full, the task gets lost and the
+ * global counter tasks_lost is incremented.
+ */
 void enqueue(int free_pod_id) {{
     if ((queue_head + 1) % QUEUE_SIZE == queue_tail) {{
         // Queue is full
@@ -77,7 +78,9 @@ void enqueue(int free_pod_id) {{
     free_pods--;
 }}
 
-// Pop one task from the queue, assuming it is not empty
+/*
+ * Pop and return a task from the queue, assuming it is not empty.
+ */
 int dequeue() {{
     int el = queue[queue_tail];
     queue[queue_tail] = NONE;
@@ -85,15 +88,24 @@ int dequeue() {{
     return el;
 }}
 
-int queue_empty() {{
+/*
+ * Check whether the queue is empty.
+ */
+bool queue_empty() {{
     return queue_head == queue_tail;
 }}
 
+/*
+ * Get the value of a cell of the map given its pos_t coordinates.
+ */
 int cell(pos_t p) {{
     return map[p.r][p.c];
 }}
 
-int cell_is_free(pos_t p) {{
+/*
+ * Check whether a cell of the map is occupied by a bot or not.
+ */
+bool cell_is_free(pos_t p) {{
     return !(cell(p) &amp; B);
 }}</declaration>
 	<template>
@@ -390,7 +402,7 @@ void maybe_step() {{
 			<name x="-399" y="306">IDLE</name>
 			<label kind="exponentialrate" x="-442" y="349">BOT_IDLE_EXP_RATE</label>
 		</location>
-		<location id="id20" x="-331" y="-25">
+		<location id="id20" x="-348" y="-25">
 			<committed/>
 		</location>
 		<init ref="id13"/>
@@ -417,7 +429,7 @@ void maybe_step() {{
 			<nail x="-620" y="238"/>
 			<nail x="-620" y="229"/>
 			<nail x="-620" y="110"/>
-			<nail x="-331" y="110"/>
+			<nail x="-348" y="110"/>
 		</transition>
 		<transition>
 			<source ref="id18"/>
@@ -427,7 +439,7 @@ void maybe_step() {{
 			<nail x="-620" y="188"/>
 			<nail x="-620" y="110"/>
 			<nail x="-501" y="110"/>
-			<nail x="-331" y="110"/>
+			<nail x="-348" y="110"/>
 		</transition>
 		<transition>
 			<source ref="id15"/>
@@ -440,9 +452,9 @@ void maybe_step() {{
 		<transition>
 			<source ref="id16"/>
 			<target ref="id15"/>
-			<label kind="guard" x="-306" y="-8">did_step &amp;&amp;
+			<label kind="guard" x="-314" y="-8">did_step &amp;&amp;
 pos != objective_pos</label>
-			<label kind="synchronisation" x="-204" y="25">asap!</label>
+			<label kind="synchronisation" x="-204" y="25">step!</label>
 			<label kind="assignment" x="-204" y="42">x = 0</label>
 			<nail x="-161" y="34"/>
 			<nail x="-161" y="0"/>
@@ -459,13 +471,13 @@ pos != objective_pos</label>
 			<target ref="id17"/>
 			<label kind="guard" x="-306" y="76">did_step &amp;&amp;
 pos == objective_pos</label>
-			<label kind="synchronisation" x="-195" y="110">asap!</label>
+			<label kind="synchronisation" x="-195" y="110">step!</label>
 		</transition>
 		<transition>
 			<source ref="id16"/>
 			<target ref="id16"/>
 			<label kind="guard" x="-76" y="51">!did_step</label>
-			<label kind="synchronisation" x="-76" y="68">asap?</label>
+			<label kind="synchronisation" x="-76" y="68">step?</label>
 			<label kind="assignment" x="-76" y="85">maybe_step()</label>
 			<nail x="-85" y="93"/>
 			<nail x="-85" y="59"/>
@@ -479,7 +491,7 @@ pos == objective_pos</label>
 			<label kind="assignment" x="-493" y="-59">enter(),
 get_task()</label>
 			<nail x="-374" y="-25"/>
-			<nail x="-357" y="-25"/>
+			<nail x="-374" y="-25"/>
 		</transition>
 		<transition>
 			<source ref="id13"/>
@@ -495,7 +507,7 @@ get_task()</label>
 			<nail x="-620" y="331"/>
 			<nail x="-620" y="110"/>
 			<nail x="-501" y="110"/>
-			<nail x="-331" y="110"/>
+			<nail x="-348" y="110"/>
 		</transition>
 	</template>
 	<system>initializer = Initializer();
