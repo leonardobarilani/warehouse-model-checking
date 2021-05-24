@@ -25,7 +25,7 @@ def eprint(*a, **kwa):
 	print(*a, **kwa, file=sys.stderr)
 
 def format_params(params, variable_params):
-	with open('template.xml') as f:
+	with open(TEMPLATE_FNAME) as f:
 		proj = f.read()
 
 	pp = params.copy()
@@ -173,8 +173,8 @@ def gen_plot(x, y, z, v, labels, ticks, fname, view_init):
 
 	if 'show' in sys.argv:
 		plt.show()
-
-	plt.savefig(fname, pad_inches=0)
+	else:
+		plt.savefig(fname, pad_inches=0)
 
 def g1():
 	params = DEFAULT_PARAMS.copy()
@@ -282,6 +282,7 @@ DEFAULT_PARAMS = {
 	'TAU'              : 1000,
 }
 
+TEMPLATE_FNAME       = './template.xml'
 N_WORKERS            = os.cpu_count()
 VERIFYTA_EXE_PATH    = '/home/marco/Downloads/Chrome/uppaal64-4.1.24/bin-Linux/verifyta'
 VERIFYTA_REGEX       = re.compile(r'Pr\((<>|\[\]) \.\.\.\) in \[([\d.e-]+),([\d.e-]+)\]')
