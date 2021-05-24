@@ -1,2 +1,3 @@
 build
-*.pkl
+src/simulation/*.pkl
+src/simulation/*.png
