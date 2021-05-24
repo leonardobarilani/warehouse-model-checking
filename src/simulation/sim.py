@@ -18,6 +18,7 @@ import matplotlib.colors as mcolors
 from tqdm import tqdm
 
 def handle_sigint(*_):
+	sys.stderr.close()
 	sys.exit(0)
 
 def eprint(*a, **kwa):
@@ -38,16 +39,15 @@ def format_params(params, variable_params):
 	return proj.format(**pp)
 
 def run_query(qpp):
-	signal.signal(signal.SIGINT, handle_sigint)
 	query, params, variable_params = qpp
 
-	query_fd, query_fname = tempfile.mkstemp(suffix='.txt')
-	os.write(query_fd, query.encode())
-	os.close(query_fd)
+	proj_file = tempfile.NamedTemporaryFile('w+', suffix='.xml')
+	proj_file.write(format_params(params, variable_params))
+	proj_file.seek(0)
 
-	proj_fd, proj_fname = tempfile.mkstemp(suffix='.xml')
-	os.write(proj_fd, format_params(params, variable_params).encode())
-	os.close(proj_fd)
+	query_file = tempfile.NamedTemporaryFile('w+', suffix='.txt')
+	query_file.write(query)
+	query_file.seek(0)
 
 	cmd = [
 		VERIFYTA_EXE_PATH,
@@ -55,13 +55,13 @@ def run_query(qpp):
 		'-S', '0',
 		'-H', '32',
 		'-E', VERIFYTA_UNCERTAINTY,
-		proj_fname,
-		query_fname
+		proj_file.name,
+		query_file.name
 	]
 
 	res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	os.remove(query_fname)
-	os.remove(proj_fname)
+	proj_file.close()
+	query_file.close()
 
 	if res.returncode != 0:
 		eprint('[ERROR]', res.stderr.decode().rstrip())
@@ -252,13 +252,18 @@ def g2():
 
 	gen_plot(*data, labels, ticks, 'plot3d_mean_nbots_qsize.png', (3, -86))
 
+def main():
+	signal.signal(signal.SIGINT, handle_sigint)
+	g1()
+	g2()
+
 ################################################################################
 
 # inverted
 COLOR_DICT = {
 	'red'  : ((0.0, 0.0, 0.0), (0.45, 0.9, 0.9), (0.55, 0.9, 0.9), (1.0, 0.9, 0.9)),
 	'green': ((0.0, 0.9, 0.9), (0.45, 0.9, 0.9), (0.55, 0.9, 0.9), (1.0, 0.0, 0.0)),
-	'blue' : ((0.0, 0.0, 0.0),                                   (1.0, 0.1, 0.1))
+	'blue' : ((0.0, 0.0, 0.0),                                     (1.0, 0.1, 0.1))
 }
 
 COLOR_MAP = mcolors.LinearSegmentedColormap('gyr', COLOR_DICT, 100)
@@ -280,11 +285,9 @@ DEFAULT_PARAMS = {
 N_WORKERS            = os.cpu_count()
 VERIFYTA_EXE_PATH    = '/home/marco/Downloads/Chrome/uppaal64-4.1.24/bin-Linux/verifyta'
 VERIFYTA_REGEX       = re.compile(r'Pr\((<>|\[\]) \.\.\.\) in \[([\d.e-]+),([\d.e-]+)\]')
-VERIFYTA_UNCERTAINTY = '0.5'
+VERIFYTA_UNCERTAINTY = '0.1'
 
 ################################################################################
 
 if __name__ == '__main__':
-	signal.signal(signal.SIGINT, handle_sigint)
-	g1()
-	g2()
+	main()
