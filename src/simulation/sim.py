@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+#
+# Given a project XML template, run different simulations in parallel on all
+# available CPUs varying 3 different parameters. Results are cached into the
+# 'out/' folder (created if not existing). Plots are then generated from those
+# results and saved them in the same folder as PNG images.
+#
+# ./sim.py template.xml [gen] [show]
+#
+#   gen : force re-simulation even if cache is present (otherwise only generates
+#         the plot based on the last simulation)
+#   show: show interactive plot instead of saving to file
+#
 
 import os
 import sys
@@ -100,6 +112,11 @@ def run_multi(query, params, ranges, xyz):
 	total = len(args)
 
 	eprint(f'Query: {query}')
+	eprint('Variable params:')
+
+	for k, v in ranges.items():
+		eprint(f'  - {k}: {v!r}')
+
 	eprint(f'Spawning {N_WORKERS} workers to run {total} simulations.')
 
 	for res in tqdm(p.imap_unordered(run_query, args), desc='Simulating', total=total):
@@ -176,7 +193,7 @@ def gen_plot(x, y, z, v, labels, ticks, fname, view_init):
 	else:
 		plt.savefig(fname, pad_inches=0)
 
-def g1():
+def sim1():
 	params = DEFAULT_PARAMS.copy()
 
 	varparams = {
@@ -195,15 +212,15 @@ def g1():
 
 	if 'gen' not in sys.argv:
 		try:
-			with open('mean_var_qsize.pkl', 'rb') as f:
+			with open(f'{OUT_FNAME_PREFIX}_mean_var_qsize.pkl', 'rb') as f:
 				data = pickle.load(f)
 		except:
 			pass
 
 	if data is None:
-		data = run_multi('Pr [<=1000] ( <> tasks_lost > 0 )', params, varparams, keys)
+		data = run_multi('Pr [<=TAU] ( <> tasks_lost > 0 )', params, varparams, keys)
 
-	with open('mean_var_qsize.pkl', 'wb') as f:
+	with open(f'{OUT_FNAME_PREFIX}_mean_var_qsize.pkl', 'wb') as f:
 		pickle.dump(data, f)
 
 	ticks = [
@@ -212,14 +229,14 @@ def g1():
 		varparams['QUEUE_CAPACITY']
 	]
 
-	gen_plot(*data, labels, ticks, 'plot3d_mean_var_qsize.png', (5, -81))
+	gen_plot(*data, labels, ticks, f'{OUT_FNAME_PREFIX}_plot3d_mean_var_qsize.png', (5, -81))
 
-def g2():
+def sim2():
 	params = DEFAULT_PARAMS.copy()
 
 	varparams = {
 		'TASK_GEN_MEAN': range(10, 20 + 1),
-		'N_BOTS': range(1, 11),
+		'N_BOTS': range(1, 10 + 1),
 		'QUEUE_CAPACITY': [1,] + list(range(5, 25 + 1, 5))
 	}
 
@@ -233,15 +250,15 @@ def g2():
 
 	if 'gen' not in sys.argv:
 		try:
-			with open('mean_nbots_qsize.pkl', 'rb') as f:
+			with open(f'{OUT_FNAME_PREFIX}_mean_nbots_qsize.pkl', 'rb') as f:
 				data = pickle.load(f)
 		except:
 			pass
 
 	if data is None:
-		data = run_multi('Pr [<=1000] ( <> tasks_lost > 0 )', params, varparams, keys)
+		data = run_multi('Pr [<=TAU] ( <> tasks_lost > 0 )', params, varparams, keys)
 
-	with open('mean_nbots_qsize.pkl', 'wb') as f:
+	with open(f'{OUT_FNAME_PREFIX}_mean_nbots_qsize.pkl', 'wb') as f:
 		pickle.dump(data, f)
 
 	ticks = [
@@ -250,12 +267,27 @@ def g2():
 		varparams['N_BOTS'],
 	]
 
-	gen_plot(*data, labels, ticks, 'plot3d_mean_nbots_qsize.png', (3, -86))
+	gen_plot(*data, labels, ticks, f'{OUT_FNAME_PREFIX}_plot3d_mean_nbots_qsize.png', (3, -86))
 
 def main():
+	global TEMPLATE_FNAME
+	global OUT_FNAME_PREFIX
+
 	signal.signal(signal.SIGINT, handle_sigint)
-	g1()
-	g2()
+	os.makedirs('out', exist_ok=True)
+
+	for a in sys.argv:
+		if a.endswith('.xml'):
+			TEMPLATE_FNAME = a
+
+	if TEMPLATE_FNAME is None:
+		eprint('Usage: ./sim.py template.xml [gen] [show]')
+		sys.exit(1)
+
+	OUT_FNAME_PREFIX = os.path.join('out', TEMPLATE_FNAME[:-4])
+
+	sim1()
+	sim2()
 
 ################################################################################
 
@@ -277,16 +309,17 @@ DEFAULT_PARAMS = {
 	'QUEUE_CAPACITY'   : 10,
 	'HUMAN_MEAN'       : 2,
 	'HUMAN_VAR'        : 1,
-	'BOT_IDLE_EXP_RATE': 10,
+	'BOT_IDLE_EXP_RATE': 3,
 	'BOT_STEP_TIME'    : 1,
 	'TAU'              : 1000,
 }
 
-TEMPLATE_FNAME       = './template.xml'
+TEMPLATE_FNAME       = None
+OUT_FNAME_PREFIX     = None
 N_WORKERS            = os.cpu_count()
 VERIFYTA_EXE_PATH    = '/home/marco/Downloads/Chrome/uppaal64-4.1.24/bin-Linux/verifyta'
 VERIFYTA_REGEX       = re.compile(r'Pr\((<>|\[\]) \.\.\.\) in \[([\d.e-]+),([\d.e-]+)\]')
-VERIFYTA_UNCERTAINTY = '0.1'
+VERIFYTA_UNCERTAINTY = '0.01'
 
 ################################################################################
 
