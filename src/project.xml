@@ -372,10 +372,7 @@ void maybe_step() {
     // Now try to step in the needed cell i.e. at newpos
 
     if (cell_is_free(newpos)) {
-        // At map entry we have pos == newpos, avoid this edge case
-        if (pos != newpos)
-            map[pos.r][pos.c] -= B;
-
+        map[pos.r][pos.c] -= B;
         map[newpos.r][newpos.c] |= B;
         pos = newpos;
         did_step = true;
