@@ -349,7 +349,7 @@ void initialize_all() {
 	<template>
 		<name>Bot</name>
 		<parameter>const bot_t id</parameter>
-		<declaration>const int OBJ_HUMAN  = 1;
+		<declaration>const int OBJ_DELIVERY  = 1;
 const int OBJ_PICKUP = 2;
 const int OBJ_RETURN = 3;
 
@@ -366,7 +366,7 @@ bool  did_step      = false;
 void update_objective(const int obj) {
     objective = obj;
 
-    if (objective == OBJ_HUMAN)
+    if (objective == OBJ_DELIVERY)
         objective_pos = HUMAN_POS;
     else
         objective_pos = pod_position[pod_id];
@@ -444,7 +444,7 @@ void maybe_step() {
 
     did_step = false;
 
-    if (objective == OBJ_HUMAN) {
+    if (objective == OBJ_DELIVERY) {
         // We need to get to the human
         // Just keep going, ignore intersections and follow the only possible path
         follow_path(c, newpos);
@@ -525,7 +525,7 @@ void maybe_step() {
 			<source ref="id17"/>
 			<target ref="id20"/>
 			<label kind="guard" x="-348" y="229">objective == OBJ_PICKUP</label>
-			<label kind="assignment" x="-365" y="246">update_objective(OBJ_HUMAN)</label>
+			<label kind="assignment" x="-365" y="246">update_objective(OBJ_DELIVERY)</label>
 			<nail x="-144" y="264"/>
 			<nail x="-620" y="264"/>
 			<nail x="-620" y="246"/>
@@ -565,7 +565,7 @@ pos != objective_pos</label>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id18"/>
-			<label kind="guard" x="-348" y="153">objective == OBJ_HUMAN</label>
+			<label kind="guard" x="-348" y="153">objective == OBJ_DELIVERY</label>
 			<label kind="synchronisation" x="-280" y="170">delivery_ready!</label>
 			<nail x="-144" y="188"/>
 		</transition>
