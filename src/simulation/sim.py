@@ -42,11 +42,11 @@ def format_params(params, variable_params):
 
 	pp = params.copy()
 
-	if 'TASK_GEN_VAR_PERCENT' in variable_params:
-		variable_params['TASK_GEN_VAR'] = int(variable_params['TASK_GEN_MEAN'] * variable_params['TASK_GEN_VAR_PERCENT'])
+	if 'N_PODS_PER_ROW_E' in variable_params:
+		variable_params['N_PODS_PER_ROW_W'] = 10 - variable_params['N_PODS_PER_ROW_E'];
 
 	pp.update(variable_params)
-	assert pp['N_BOTS'] + pp['QUEUE_CAPACITY'] < pp['N_POD_ROWS'] * pp['N_PODS_PER_ROW']
+	assert pp['N_BOTS'] + pp['QUEUE_CAPACITY'] < pp['N_POD_ROWS'] * (pp['N_PODS_PER_ROW_E'] + pp['N_PODS_PER_ROW_W'])
 
 	return proj.format(**pp)
 
@@ -112,6 +112,7 @@ def run_multi(query, params, ranges, xyz):
 	total = len(args)
 
 	eprint(f'Query: {query}')
+	eprint(f'Uncertainty: {VERIFYTA_UNCERTAINTY}')
 	eprint('Variable params:')
 
 	for k, v in ranges.items():
@@ -195,24 +196,28 @@ def gen_plot(x, y, z, v, labels, ticks, fname, view_init):
 
 def sim1():
 	params = DEFAULT_PARAMS.copy()
+	params.update({
+		'N_BOTS'    : 5,
+		'N_POD_ROWS': 5,
+	})
 
 	varparams = {
-		'TASK_GEN_MEAN': range(10, 20 + 1),
-		'TASK_GEN_VAR_PERCENT': map(lambda x: x * 0.01, range(0, 100 + 1, 10)),
-		'QUEUE_CAPACITY': [1,] + list(range(5, 30 + 1, 5))
+		'TASK_GEN_MEAN'   : range(10, 20 + 1),
+		'QUEUE_CAPACITY'  : [1,] + list(range(5, 20 + 1, 5)),
+		'N_PODS_PER_ROW_E': range(0, 10 + 1)
 	}
 
 	for k, v in varparams.items():
 		if type(v) is not list:
 			varparams[k] = list(v)
 
-	keys = ['TASK_GEN_MEAN', 'TASK_GEN_VAR_PERCENT', 'QUEUE_CAPACITY']
-	labels = ['task gen mean time', 'task gen variance%', 'queue capacity']
+	keys = ['TASK_GEN_MEAN', 'QUEUE_CAPACITY', 'N_PODS_PER_ROW_E']
+	labels = ['task gen mean time', 'queue capacity', 'pods per row (east)']
 	data = None
 
 	if 'gen' not in sys.argv:
 		try:
-			with open(f'{OUT_FNAME_PREFIX}_mean_var_qsize.pkl', 'rb') as f:
+			with open(f'{OUT_FNAME_PREFIX}_gen_highway_qsize.pkl', 'rb') as f:
 				data = pickle.load(f)
 		except:
 			pass
@@ -220,16 +225,16 @@ def sim1():
 	if data is None:
 		data = run_multi('Pr [<=TAU] ( <> tasks_lost > 0 )', params, varparams, keys)
 
-	with open(f'{OUT_FNAME_PREFIX}_mean_var_qsize.pkl', 'wb') as f:
+	with open(f'{OUT_FNAME_PREFIX}_gen_highway_qsize.pkl', 'wb') as f:
 		pickle.dump(data, f)
 
 	ticks = [
 		varparams['TASK_GEN_MEAN'],
-		[0.0, 0.5, 1.0],
-		varparams['QUEUE_CAPACITY']
+		varparams['QUEUE_CAPACITY'],
+		varparams['N_PODS_PER_ROW_E'],
 	]
 
-	gen_plot(*data, labels, ticks, f'{OUT_FNAME_PREFIX}_plot3d_mean_var_qsize.png', (5, -81))
+	gen_plot(*data, labels, ticks, f'{OUT_FNAME_PREFIX}_plot3d_gen_highway_qsize.png', (4, -84))
 
 def sim2():
 	params = DEFAULT_PARAMS.copy()
@@ -287,7 +292,7 @@ def main():
 	OUT_FNAME_PREFIX = os.path.join('out', TEMPLATE_FNAME[:-4])
 
 	sim1()
-	sim2()
+	#sim2()
 
 ################################################################################
 
@@ -302,11 +307,12 @@ COLOR_MAP = mcolors.LinearSegmentedColormap('gyr', COLOR_DICT, 100)
 
 DEFAULT_PARAMS = {
 	'N_BOTS'           : 5,
-	'N_POD_ROWS'       : 10,
-	'N_PODS_PER_ROW'   : 5,
+	'N_POD_ROWS'       : 5,
+	'N_PODS_PER_ROW_W' : 3,
+	'N_PODS_PER_ROW_E' : 3,
+	'QUEUE_CAPACITY'   : 10,
 	'TASK_GEN_MEAN'    : 1,
 	'TASK_GEN_VAR'     : 0,
-	'QUEUE_CAPACITY'   : 10,
 	'HUMAN_MEAN'       : 2,
 	'HUMAN_VAR'        : 1,
 	'BOT_IDLE_EXP_RATE': 3,
@@ -314,7 +320,7 @@ DEFAULT_PARAMS = {
 	'TAU'              : 1000,
 }
 
-TEMPLATE_FNAME       = None
+TEMPLATE_FNAME       = './template.xml'
 OUT_FNAME_PREFIX     = None
 N_WORKERS            = os.cpu_count()
 VERIFYTA_EXE_PATH    = '/home/marco/Downloads/Chrome/uppaal64-4.1.24/bin-Linux/verifyta'
