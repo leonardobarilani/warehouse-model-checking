@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-	<declaration>// Global system parameters
+	<declaration>/*** GLOBAL SYSTEM PARAMETERS (1/2) ******************************************/
+
 const int N_BOTS            = 3;
 const int N_POD_ROWS        = 3;
-const int N_PODS_PER_ROW    = 5;
+const int N_PODS_PER_ROW_W  = 3;
+const int N_PODS_PER_ROW_E  = 0;
 const int QUEUE_CAPACITY    = 5;
 const int TASK_GEN_MEAN     = 20;
 const int TASK_GEN_VAR      = 5;
@@ -14,20 +16,36 @@ const int BOT_IDLE_EXP_RATE = 3;
 const int BOT_STEP_TIME     = 1;
 const int TAU               = 1000;
 
-// Global *derived* system parameters
-const int QUEUE_SIZE = QUEUE_CAPACITY + 1;
-const int N_PODS     = N_POD_ROWS * N_PODS_PER_ROW;
-const int MAP_H      = N_POD_ROWS * 2 + 1;
-const int MAP_W      = N_PODS_PER_ROW + 3;
+/*** GLOBAL *DERIVED* SYSTEM PARAMETERS **************************************/
 
-// Global types
+const int QUEUE_SIZE     = QUEUE_CAPACITY + 1;
+const int N_PODS         = N_POD_ROWS * (N_PODS_PER_ROW_W + N_PODS_PER_ROW_E);
+const int MAP_H          = N_POD_ROWS * 2 + 1;
+const int MAP_W          = N_PODS_PER_ROW_W + ((N_PODS_PER_ROW_W == 0) ? 0 : 1) +
+                           N_PODS_PER_ROW_E + ((N_PODS_PER_ROW_E == 0) ? 0 : 1) + 2;
+const int HIGHWAY_W_COL  = N_PODS_PER_ROW_W + ((N_PODS_PER_ROW_W == 0) ? 0 : 1);
+const int HIGHWAY_E_COL  = HIGHWAY_W_COL + 1;
+
+// ID of the first pod on the East side of the warehouse.
+// All pods on the East side have ID &gt;= POD_ID_DIVIDER.
+const int POD_ID_DIVIDER = N_PODS_PER_ROW_W * N_POD_ROWS;
+
+/*** GLOBAL TYPES ************************************************************/
+
 typedef int[0, N_BOTS - 1] bot_t;
 typedef int[0, N_PODS - 1] pod_t;
 typedef struct { int r, c; } pos_t;
 
-// Global constants
-const pos_t ENTRY_POS = { 0, 1 };
-const pos_t HUMAN_POS = { 0, 0 };
+/*** GLOBAL SYSTEM PARAMETERS (2/2) ******************************************/
+
+// Entry and Human can have arbitrary positions as long as they are *on the highway*.
+// To simplify things, here we just put Entry and Human respectively at the top and
+// bottom of the East column of the highway.
+const pos_t ENTRY_POS = { 0        , HIGHWAY_E_COL };
+const pos_t HUMAN_POS = { MAP_H - 1, HIGHWAY_E_COL };
+
+/*** GLOBAL CONSTANTS ********************************************************/
+
 const int POD_FREE    = 0;
 const int POD_BUSY    = 1;
 const int NONE        = -1;
@@ -35,31 +53,34 @@ const int N           =  1; // North
 const int S           =  2; // South
 const int E           =  4; // East
 const int W           =  8; // West
-const int X           = 16; // Crossing
+const int X           = 16; // Intersection
 const int B           = 32; // Bot present
 const int P           = 64; // Pod present
 
-// Global counters
-int tasks_lost = 0;      // n. of tasks lost because the queue was full
-int tasks_completed = 0; // n. of tasks succesfully completed (pickup + delivery + return)
+/*** GLOBAL VARIABLES ********************************************************/
 
-// All defined channels
-urgent broadcast chan asap;           // dummy urgent channel to complete actions as soon as possible
-urgent broadcast chan step;           // synchronize bot movements to help bots stuck in line to move as soon as possible
-urgent broadcast chan init_done;      // signal everyone that global vars are initialized
-urgent broadcast chan human_done;     // notify currently delivering bot that human finished their job
-urgent broadcast chan delivery_ready; // notify human that bot just arrived to deliver a pod
-
-// Global variables
 int map[MAP_H][MAP_W];      // warehouse map
 int pods[N_PODS];           // status of pods: each pod can either be FREE or BUSY
-int free_pods = N_PODS;     // n. of currently free pods (not assigned as a task to any bot)
 pos_t pod_position[N_PODS]; // positions of pods (coords), only generated once during initialization
-int queue[QUEUE_SIZE];      // task FIFO queue (implemented as a ring buffer)
+int free_pods = N_PODS;     // n. of currently free pods (not assigned as a task to any bot)
+
+// Task FIFO queue (implemented as a ring buffer)
+int queue[QUEUE_SIZE];
 int queue_head = 0;
 int queue_tail = 0;
 
-/*************** Global utility functions *****************/
+int tasks_lost      = 0; // n. of tasks lost because the queue was full
+int tasks_completed = 0; // n. of tasks succesfully completed (pickup + delivery + return)
+
+/*** CHANNELS ****************************************************************/
+
+urgent broadcast chan asap;           // dummy urgent channel to complete actions as soon as possible
+urgent broadcast chan step;           // synchronize bot movements to make bots stuck in line move as soon as possible
+urgent broadcast chan init_done;      // signal everyone that global vars are initialized
+urgent broadcast chan delivery_ready; // notify human that bot just arrived to deliver a pod
+urgent broadcast chan human_done;     // notify currently delivering bot that human finished their job
+
+/*** GLOBAL UTILITY FUNCTIONS ************************************************/
 
 /*
  * Add one task to the queue. If the queue is full, the task gets lost and the
@@ -224,9 +245,75 @@ clock x;</declaration>
 	</template>
 	<template>
 		<name>Initializer</name>
-		<declaration>void initialize_all() {
-    int i, r, c;
+		<declaration>void build_west() {
+    int r, c;
     int cur_pod_id = 0;
+
+    // Top row
+    for (c = 0; c &lt; N_PODS_PER_ROW_W + 1; c++)
+        map[0][c] = E;
+
+    // Leftmost column
+    for (r = 1; r &lt; MAP_H; r++)
+        map[r][0] = N;
+
+    // Pod rows
+    for (r = 1; r &lt; MAP_H; r += 2) {
+        for (c = 1; c &lt; N_PODS_PER_ROW_W + 1; c++) {
+            pod_position[cur_pod_id].r = r;
+            pod_position[cur_pod_id].c = c;
+            cur_pod_id++;
+            map[r    ][c] = P | N; // pass through pod
+            map[r + 1][c] = W;
+        }
+
+        map[r + 1][N_PODS_PER_ROW_W + 1] = X;
+    }
+}
+
+void build_east() {
+    int r, c;
+    int cur_pod_id = POD_ID_DIVIDER;
+
+    // Top row
+    for (c = MAP_W - N_PODS_PER_ROW_E - 1; c &lt; MAP_W; c++)
+        map[0][c] = W;
+
+    // Rightmost column
+    for (r = 1; r &lt; MAP_H; r++)
+        map[r][MAP_W - 1] = N;
+
+    // Pod rows
+    for (r = 1; r &lt; MAP_H; r += 2) {
+        for (c = MAP_W - N_PODS_PER_ROW_E - 1; c &lt; MAP_W - 1; c++) {
+            pod_position[cur_pod_id].r = r;
+            pod_position[cur_pod_id].c = c;
+            cur_pod_id++;
+            map[r    ][c] = P | N; // pass through pod
+            map[r + 1][c] = E;
+        }
+
+        map[r + 1][MAP_W - N_PODS_PER_ROW_E - 2] = X;
+    }
+}
+
+void build_highway() {
+    int r;
+
+    // Nort-West tile
+    map[0][HIGHWAY_W_COL] |= E;
+    // South-East tile
+    map[MAP_H - 1][HIGHWAY_E_COL] |= W;
+
+    // West / East columns
+    for(r = 0; r &lt; MAP_H - 1; r++) {
+        map[r + 1][HIGHWAY_W_COL] |= N;
+        map[r    ][HIGHWAY_E_COL] |= S;
+    }
+}
+
+void initialize_all() {
+    int i, r, c;
 
     for (i = 0; i &lt; N_PODS; i++)
         pods[i] = POD_FREE;
@@ -238,37 +325,14 @@ clock x;</declaration>
         for (c = 0; c &lt; MAP_W; c++)
             map[r][c] = 0;
 
-    // Top row
-    for (c = 0; c &lt; MAP_W - 1; c++)
-        map[0][c] = E;
+    if (N_PODS_PER_ROW_W &gt; 0)
+        build_west();
+    if (N_PODS_PER_ROW_E &gt; 0)
+        build_east();
 
-    // Rightmost column
-    for (r = 0; r &lt; MAP_H - 1; r++)
-        map[r][MAP_W - 1] = S;
-
-    // Leftmost and second-leftmost column
-    for (r = 1; r &lt; MAP_H; r++) {
-        map[r][0] = N;
-        map[r][1] = N;
-    }
-
-    // Pod rows
-    for (r = 1; r &lt; MAP_H; r += 2) {
-        for (c = 2; c &lt; MAP_W - 1; c++) {
-            pod_position[cur_pod_id].r = r;
-            pod_position[cur_pod_id].c = c;
-            cur_pod_id++;
-            map[r    ][c] = P | S;
-            map[r + 1][c] = W;
-        }
-
-        map[r + 1][1] = X;
-        map[r + 1][MAP_W - 1] = X;
-    }
-
-    // Bottom right
-    map[MAP_H - 1][MAP_W - 1] = W;
-}</declaration>
+    build_highway();
+}
+</declaration>
 		<location id="id11" x="-68" y="-8">
 			<committed/>
 		</location>
@@ -296,6 +360,9 @@ pod_t pod_id        = 0;
 int   objective     = -1;
 bool  did_step      = false;
 
+/*
+ * Update the current objective and objective position.
+ */
 void update_objective(const int obj) {
     objective = obj;
 
@@ -305,17 +372,29 @@ void update_objective(const int obj) {
         objective_pos = pod_position[pod_id];
 }
 
+/*
+ * Enter the map at the entry point, initially without an
+ * assigned objective.
+ */
 void enter() {
     pos = ENTRY_POS;
     map[pos.r][pos.c] |= B;
 }
 
+/*
+ * Pop a task from the task queue and update the objective
+ * to pod pickup.
+ */
 void get_task() {
     pod_id = dequeue();
     pods[pod_id] = POD_BUSY;
     update_objective(OBJ_PICKUP);
 }
 
+/*
+ * Complete the current task after putting the pod back at
+ * its original position in the map.
+ */
 void complete_task() {
     pods[pod_id] = POD_FREE;
     pod_id = 0;
@@ -324,7 +403,9 @@ void complete_task() {
     tasks_completed++;
 }
 
-// Update given position one step in the only possible direction
+/* 
+ * Update given position one step in the only possible direction.
+ */
 void follow_path(int cell, pos_t &amp;p) {
     if (cell &amp; N) p.r--;
     else if (cell &amp; S) p.r++;
@@ -332,7 +413,31 @@ void follow_path(int cell, pos_t &amp;p) {
     else if (cell &amp; W) p.c--;
 }
 
-// Try to step if possible, set did_step accordingly
+/*
+ * Check whether or not we reached the *West* intersection right
+ * below the wanted pod on the *West* side, and therefore we need to
+ * enter the row to get to the pod.
+ */
+bool should_enter_west_pod_row(pos_t pos) {
+    return pos.c == HIGHWAY_W_COL
+           &amp;&amp; pod_id &lt; POD_ID_DIVIDER
+           &amp;&amp; pos.r - 1 == objective_pos.r;
+}
+
+/*
+ * Check whether or not we reached the *East* intersection right
+ * below the wanted pod on the *East* side, and therefore we need to
+ * enter the row to get to the pod.
+ */
+bool should_enter_east_pod_row(pos_t pos) {
+    return pos.c == HIGHWAY_E_COL
+           &amp;&amp; pod_id &gt;= POD_ID_DIVIDER
+           &amp;&amp; pos.r - 1 == objective_pos.r;
+}
+
+/* 
+ * Try to step if possible, then set did_step accordingly.
+ */
 void maybe_step() {
     pos_t newpos = pos;
     int c = cell(pos);
@@ -340,28 +445,29 @@ void maybe_step() {
     did_step = false;
 
     if (objective == OBJ_HUMAN) {
-        if (c &amp; X) {
-            // We are at a cross, go W
-            newpos.c--;
-        } else {
-            // Otherwise just follow the only possible dir
-            follow_path(c, newpos);
-        }
+        // We need to get to the human
+        // Just keep going, ignore intersections and follow the only possible path
+        follow_path(c, newpos);
     } else {
+        // We need to get to the pod location, either for pickup or for return
+
         if (pos.c == objective_pos.c &amp;&amp; pos.r == objective_pos.r + 1) {
             // We are in the cell immediately S of the pod, go N
             newpos.r--;
         } else if (c &amp; X) {
-            // We are at a cross
-            if (pos.c == 1) {
-                // We are on the west-side highway, go up
-                newpos.r--;
-            } else if (pos.r == objective_pos.r + 1) {
-                // We reached the pod row, go W
+            // We are at an intersection
+
+            if (should_enter_west_pod_row(pos)) {
+                // Enter West row containing the wanted pod
                 newpos.c--;
+            } else if (should_enter_east_pod_row(pos)) {
+                // Enter Eeast row containing the wanted pod
+                newpos.c++;
             } else {
-                // Otherwise go S
-                newpos.r++;
+                // We don't care about this intersection as it's not the one
+                // right below the row containing the pod we want to reach.
+                // Just keep going, follow the only possible path.
+                follow_path(c, newpos);
             }
         } else {
             // Otherwise just follow the only possible dir
@@ -369,10 +475,10 @@ void maybe_step() {
         }
     }
 
-    // Now try to step in the needed cell i.e. at newpos
+    // Now try to actually step in the next cell (newpos)
 
     if (cell_is_free(newpos)) {
-        map[pos.r][pos.c] -= B;
+        map[pos.r   ][pos.c   ] -= B;
         map[newpos.r][newpos.c] |= B;
         pos = newpos;
         did_step = true;
@@ -412,14 +518,14 @@ void maybe_step() {
 			<source ref="id17"/>
 			<target ref="id19"/>
 			<label kind="guard" x="-348" y="297">objective == OBJ_RETURN</label>
-			<label kind="assignment" x="-348" y="314">complete_task()</label>
+			<label kind="assignment" x="-272" y="314">complete_task()</label>
 			<nail x="-144" y="332"/>
 		</transition>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id20"/>
-			<label kind="guard" x="-467" y="230">objective == OBJ_PICKUP</label>
-			<label kind="assignment" x="-467" y="247">update_objective(OBJ_HUMAN)</label>
+			<label kind="guard" x="-348" y="229">objective == OBJ_PICKUP</label>
+			<label kind="assignment" x="-365" y="246">update_objective(OBJ_HUMAN)</label>
 			<nail x="-144" y="264"/>
 			<nail x="-620" y="264"/>
 			<nail x="-620" y="246"/>
@@ -431,8 +537,8 @@ void maybe_step() {
 		<transition>
 			<source ref="id18"/>
 			<target ref="id20"/>
-			<label kind="synchronisation" x="-612" y="153">human_done?</label>
-			<label kind="assignment" x="-612" y="171">update_objective(OBJ_RETURN)</label>
+			<label kind="synchronisation" x="-493" y="153">human_done?</label>
+			<label kind="assignment" x="-612" y="170">update_objective(OBJ_RETURN)</label>
 			<nail x="-620" y="188"/>
 			<nail x="-620" y="110"/>
 			<nail x="-501" y="110"/>
@@ -449,7 +555,7 @@ void maybe_step() {
 		<transition>
 			<source ref="id16"/>
 			<target ref="id15"/>
-			<label kind="guard" x="-314" y="-8">did_step &amp;&amp;
+			<label kind="guard" x="-297" y="-8">did_step &amp;&amp;
 pos != objective_pos</label>
 			<label kind="synchronisation" x="-204" y="25">step!</label>
 			<label kind="assignment" x="-204" y="42">x = 0</label>
@@ -460,13 +566,13 @@ pos != objective_pos</label>
 			<source ref="id17"/>
 			<target ref="id18"/>
 			<label kind="guard" x="-348" y="153">objective == OBJ_HUMAN</label>
-			<label kind="synchronisation" x="-348" y="170">delivery_ready!</label>
+			<label kind="synchronisation" x="-280" y="170">delivery_ready!</label>
 			<nail x="-144" y="188"/>
 		</transition>
 		<transition>
 			<source ref="id16"/>
 			<target ref="id17"/>
-			<label kind="guard" x="-306" y="76">did_step &amp;&amp;
+			<label kind="guard" x="-297" y="76">did_step &amp;&amp;
 pos == objective_pos</label>
 			<label kind="synchronisation" x="-195" y="110">step!</label>
 		</transition>
@@ -482,10 +588,10 @@ pos == objective_pos</label>
 		<transition>
 			<source ref="id14"/>
 			<target ref="id20"/>
-			<label kind="guard" x="-493" y="-110">!queue_empty()
+			<label kind="guard" x="-493" y="-119">!queue_empty()
 &amp;&amp; cell_is_free(ENTRY_POS)</label>
-			<label kind="synchronisation" x="-493" y="-76">asap!</label>
-			<label kind="assignment" x="-493" y="-59">enter(),
+			<label kind="synchronisation" x="-493" y="-85">asap!</label>
+			<label kind="assignment" x="-493" y="-68">enter(),
 get_task()</label>
 			<nail x="-374" y="-25"/>
 			<nail x="-374" y="-25"/>
@@ -498,9 +604,9 @@ get_task()</label>
 		<transition>
 			<source ref="id19"/>
 			<target ref="id20"/>
-			<label kind="guard" x="-612" y="280">!queue_empty()</label>
-			<label kind="synchronisation" x="-612" y="297">asap!</label>
-			<label kind="assignment" x="-612" y="314">get_task()</label>
+			<label kind="guard" x="-518" y="280">!queue_empty()</label>
+			<label kind="synchronisation" x="-459" y="297">asap!</label>
+			<label kind="assignment" x="-484" y="314">get_task()</label>
 			<nail x="-620" y="331"/>
 			<nail x="-620" y="110"/>
 			<nail x="-501" y="110"/>
@@ -524,3 +630,4 @@ system initializer, generator, human, Bot;
 		</query>
 	</queries>
 </nta>
+
