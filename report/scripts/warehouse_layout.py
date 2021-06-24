@@ -61,21 +61,28 @@ for y, row in enumerate(grid, 1):
         elif cell == 'h':
             print(f'\\fill[red,opacity=0.3] ({x},{y - 1}) rectangle ({x + 1},{y});')
 
-print(r'''\
+print(r'''
             \draw[black,thick] (0,0) -- (0, 7) -- (12, 7) -- (12, 0) -- cycle;
             \draw[blue,ultra thick] (4,7) -- (6, 7) -- (6, 0) -- (4, 0) -- cycle;
         }
     };
 
-    \node (n1) [box, right=of wh.north east, anchor=north west, fill=red] {\textbf{human}};
-    \node (n2) [box, below=of n1.south west, anchor=north west, fill=green] {\textbf{entry}};
-    \node (n3) [box, below=of n2.south west, anchor=north west, fill=cyan] {\textbf{pod}};
-    \node (n4) [box, below=of n3.south west, anchor=north west] {\textbf{intersection}};
-    \node (n5) [box, below=of n4.south west, anchor=north west, blue, ultra thick, text=black] {\textbf{highway}};
+    \node[right=0.5cm of wh.east] {
+        \tikz {
+            \node (n1) [box, anchor=north west, fill=red, minimum width=0.5cm, minimum height=0.5cm, label=right:human] {};
+            \node (n2) [box, below=of n1.south west, anchor=north west, fill=green, minimum width=0.5cm, minimum height=0.5cm, label=right:entry] {};
+            \node (n3) [box, below=of n2.south west, anchor=north west, fill=cyan, minimum width=0.5cm, minimum height=0.5cm, label=right:pod] {};
+            \node (n4) [box, below=of n3.south west, anchor=north west, minimum width=0.5cm, minimum height=0.5cm, label=right:intersection] {};
+            \node (n5) [box, below=of n4.south west, anchor=north west, blue, ultra thick, text=black, minimum width=0.5cm, minimum height=0.5cm, label=right:highway] {};
+            \node (n6) [inner sep=0,below=of n5.south west, anchor=north west, label=right:default robot direction] {
+                \tikz { \draw[white,fill=black,opacity=0.3] (0.25,-0.25) -- (0.75,-0.5) -- (0.25,-0.75) -- cycle; }
+            };
 
-    \begin{pgfonlayer}{bg}
-        \filldraw[yellow,opacity=0.3][] (n4.south west) -- (n4.north west) -- (n4.north east) -- cycle;
-        \filldraw[orange,opacity=0.3][] (n4.north east) -- (n4.south east) -- (n4.south west) -- cycle;
-    \end{pgfonlayer}
+            \begin{pgfonlayer}{bg}
+                \filldraw[yellow,opacity=0.3][] (n4.south west) -- (n4.north west) -- (n4.north east) -- cycle;
+                \filldraw[orange,opacity=0.3][] (n4.north east) -- (n4.south east) -- (n4.south west) -- cycle;
+            \end{pgfonlayer}
+        }
+    };
 \end{tikzpicture}
 \end{document}''')
