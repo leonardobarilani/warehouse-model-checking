@@ -1,5 +1,4 @@
 ---
-mainfont: "serif"
 title: "Model Checking of Warehouse Robotics"
 subtitle: "\\textbf{Project Report}\\newline Formal Methods for Concurrent and Real-Time Systems"
 author: ["Leonardo Barilani", "Marco Bonelli"]
@@ -10,6 +9,8 @@ logo-width: 250
 header-right: "A.Y. 2020-21"
 header-left: "Model Checking of Warehouse Robotics"
 footer-left: "© 2021 Leonardo Barilani, Marco Bonelli"
+mainfont: "serif"
+fontsize: 10pt
 ...
 
 
@@ -47,3 +48,5 @@ footer-left: "© 2021 Leonardo Barilani, Marco Bonelli"
 \newpage
 
 \listoffigures
+
+\setlength{\belowcaptionskip}{-15pt}
