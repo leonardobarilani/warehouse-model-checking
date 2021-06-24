@@ -192,29 +192,29 @@ clock x;</declaration>
 		<location id="id6" x="161" y="-76">
 			<label kind="invariant" x="170" y="-102">x &lt;= u_max</label>
 		</location>
-		<location id="id7" x="340" y="-76">
-			<label kind="invariant" x="357" y="-102">x &lt;= u_max</label>
+		<location id="id7" x="289" y="-76">
+			<label kind="invariant" x="306" y="-102">x &lt;= u_max</label>
 		</location>
 		<location id="id8" x="17" y="-76">
 		</location>
-		<location id="id9" x="688" y="-76">
+		<location id="id9" x="561" y="-76">
 		</location>
-		<location id="id10" x="527" y="-76">
-			<label kind="invariant" x="544" y="-102">x &lt;= u_max</label>
+		<location id="id10" x="425" y="-76">
+			<label kind="invariant" x="442" y="-102">x &lt;= u_max</label>
 		</location>
 		<init ref="id5"/>
 		<transition>
 			<source ref="id9"/>
 			<target ref="id8"/>
-			<label kind="synchronisation" x="578" y="-51">human_done!</label>
-			<nail x="688" y="-25"/>
+			<label kind="synchronisation" x="459" y="-51">human_done!</label>
+			<nail x="561" y="-25"/>
 			<nail x="17" y="-25"/>
 		</transition>
 		<transition>
 			<source ref="id7"/>
 			<target ref="id10"/>
-			<label kind="guard" x="357" y="-136">x &gt;= u_min</label>
-			<label kind="assignment" x="356" y="-119">x = 0</label>
+			<label kind="guard" x="306" y="-136">x &gt;= u_min</label>
+			<label kind="assignment" x="305" y="-119">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id6"/>
@@ -236,8 +236,8 @@ clock x;</declaration>
 		<transition>
 			<source ref="id10"/>
 			<target ref="id9"/>
-			<label kind="guard" x="544" y="-136">x &gt;= u_min</label>
-			<label kind="assignment" x="543" y="-119">x = 0</label>
+			<label kind="guard" x="442" y="-136">x &gt;= u_min</label>
+			<label kind="assignment" x="441" y="-119">x = 0</label>
 		</transition>
 	</template>
 	<template>
@@ -261,7 +261,7 @@ clock x;</declaration>
             pod_position[cur_pod_id].c = c;
             cur_pod_id++;
             map[r    ][c] = P | N; // pass through pod
-            map[r + 1][c] = W;
+            map[r + 1][c] = W | X;
         }
 
         map[r + 1][N_PODS_PER_ROW_W + 1] = X;
@@ -287,7 +287,7 @@ void build_east() {
             pod_position[cur_pod_id].c = c;
             cur_pod_id++;
             map[r    ][c] = P | N; // pass through pod
-            map[r + 1][c] = E;
+            map[r + 1][c] = E | X;
         }
 
         map[r + 1][MAP_W - N_PODS_PER_ROW_E - 2] = X;
@@ -400,7 +400,7 @@ void complete_task() {
     tasks_completed++;
 }
 
-/*
+/* 
  * Update given position one step in the only possible direction.
  */
 void follow_path(int cell, pos_t &amp;p) {
@@ -432,7 +432,7 @@ bool should_enter_east_pod_row(pos_t pos) {
            &amp;&amp; pos.r - 1 == objective_pos.r;
 }
 
-/*
+/* 
  * Try to step if possible, then set did_step accordingly.
  */
 void maybe_step() {
@@ -448,10 +448,7 @@ void maybe_step() {
     } else {
         // We need to get to the pod location, either for pickup or for return
 
-        if (pos.c == objective_pos.c &amp;&amp; pos.r == objective_pos.r + 1) {
-            // We are in the cell immediately S of the pod, go N
-            newpos.r--;
-        } else if (c &amp; X) {
+        if (c &amp; X) {
             // We are at an intersection
 
             if (should_enter_west_pod_row(pos)) {
@@ -460,10 +457,12 @@ void maybe_step() {
             } else if (should_enter_east_pod_row(pos)) {
                 // Enter Eeast row containing the wanted pod
                 newpos.c++;
+            } else if (pos.c == objective_pos.c &amp;&amp; pos.r == objective_pos.r + 1) {
+                // We are in the cell immediately S of the pod, go N
+                newpos.r--;
             } else {
-                // We don't care about this intersection as it's not the one
-                // right below the row containing the pod we want to reach.
-                // Just keep going, follow the only possible path.
+                // We don't care about this intersection
+                // Just keep going, follow the only possible path
                 follow_path(c, newpos);
             }
         } else {
@@ -522,7 +521,7 @@ void maybe_step() {
 			<source ref="id17"/>
 			<target ref="id20"/>
 			<label kind="guard" x="-348" y="229">objective == OBJ_PICKUP</label>
-			<label kind="assignment" x="-365" y="246">update_objective(OBJ_DELIVERY)</label>
+			<label kind="assignment" x="-382" y="246">update_objective(OBJ_DELIVERY)</label>
 			<nail x="-144" y="264"/>
 			<nail x="-620" y="264"/>
 			<nail x="-620" y="246"/>
@@ -552,7 +551,7 @@ void maybe_step() {
 		<transition>
 			<source ref="id16"/>
 			<target ref="id15"/>
-			<label kind="guard" x="-297" y="-8">did_step &amp;&amp;
+			<label kind="guard" x="-306" y="-8">did_step &amp;&amp;
 pos != objective_pos</label>
 			<label kind="synchronisation" x="-204" y="25">step!</label>
 			<label kind="assignment" x="-204" y="42">x = 0</label>
@@ -562,7 +561,7 @@ pos != objective_pos</label>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id18"/>
-			<label kind="guard" x="-348" y="153">objective == OBJ_DELIVERY</label>
+			<label kind="guard" x="-357" y="153">objective == OBJ_DELIVERY</label>
 			<label kind="synchronisation" x="-280" y="170">delivery_ready!</label>
 			<nail x="-144" y="188"/>
 		</transition>
