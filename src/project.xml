@@ -46,8 +46,6 @@ const pos_t HUMAN_POS = { MAP_H - 1, HIGHWAY_E_COL };
 
 /*** GLOBAL CONSTANTS ********************************************************/
 
-const int POD_FREE    = 0;
-const int POD_BUSY    = 1;
 const int NONE        = -1;
 const int N           =  1; // North
 const int S           =  2; // South
@@ -59,10 +57,9 @@ const int P           = 64; // Pod present
 
 /*** GLOBAL VARIABLES ********************************************************/
 
-int map[MAP_H][MAP_W];      // warehouse map
-int pods[N_PODS];           // status of pods: each pod can either be FREE or BUSY
+int   map[MAP_H][MAP_W];    // warehouse map
+bool  pod_free[N_PODS];     // status of pods free/busy == true/false
 pos_t pod_position[N_PODS]; // positions of pods (coords), only generated once during initialization
-int free_pods = N_PODS;     // n. of currently free pods (not assigned as a task to any bot)
 
 // Task FIFO queue (implemented as a ring buffer)
 int queue[QUEUE_SIZE];
@@ -84,19 +81,19 @@ urgent broadcast chan human_done;     // notify currently delivering bot that hu
 
 /*
  * Add one task to the queue. If the queue is full, the task gets lost and the
- * global counter tasks_lost is incremented.
+ * global counter tasks_lost is incremented. This assumes that the pod_id passed
+ * corresponds to a free pod.
  */
-void enqueue(int free_pod_id) {
+void enqueue(int pod_id) {
     if ((queue_head + 1) % QUEUE_SIZE == queue_tail) {
         // Queue is full
         tasks_lost++;
         return;
     }
 
-    queue[queue_head] = free_pod_id;
+    queue[queue_head] = pod_id;
     queue_head = (queue_head + 1) % QUEUE_SIZE;
-    pods[free_pod_id] = POD_BUSY;
-    free_pods--;
+    pod_free[pod_id] = false;
 }
 
 /*
@@ -158,7 +155,7 @@ clock x;</declaration>
 			<source ref="id2"/>
 			<target ref="id0"/>
 			<label kind="select" x="-289" y="-93">pod_id: pod_t</label>
-			<label kind="guard" x="-289" y="-76">pods[pod_id] == POD_FREE &amp;&amp; cell_is_free(pod_position[pod_id])</label>
+			<label kind="guard" x="-289" y="-76">pod_free[pod_id] &amp;&amp; cell_is_free(pod_position[pod_id])</label>
 			<label kind="synchronisation" x="-289" y="-59">asap!</label>
 			<label kind="assignment" x="-289" y="-42">enqueue(pod_id), x = 0</label>
 			<nail x="144" y="-102"/>
@@ -316,7 +313,7 @@ void initialize_all() {
     int i, r, c;
 
     for (i = 0; i &lt; N_PODS; i++)
-        pods[i] = POD_FREE;
+        pod_free[i] = true;
 
     for (i = 0; i &lt; QUEUE_SIZE; i++)
         queue[i] = NONE;
@@ -387,7 +384,7 @@ void enter() {
  */
 void get_task() {
     pod_id = dequeue();
-    pods[pod_id] = POD_BUSY;
+    pod_free[pod_id] = false;
     update_objective(OBJ_PICKUP);
 }
 
@@ -396,14 +393,14 @@ void get_task() {
  * its original position in the map.
  */
 void complete_task() {
-    pods[pod_id] = POD_FREE;
+    pod_free[pod_id] = true;
     pod_id = 0;
     objective_pos.r = -1;
     objective_pos.c = -1;
     tasks_completed++;
 }
 
-/* 
+/*
  * Update given position one step in the only possible direction.
  */
 void follow_path(int cell, pos_t &amp;p) {
@@ -435,7 +432,7 @@ bool should_enter_east_pod_row(pos_t pos) {
            &amp;&amp; pos.r - 1 == objective_pos.r;
 }
 
-/* 
+/*
  * Try to step if possible, then set did_step accordingly.
  */
 void maybe_step() {
@@ -630,4 +627,3 @@ system initializer, generator, human, Bot;
 		</query>
 	</queries>
 </nta>
-
