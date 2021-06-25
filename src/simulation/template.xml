@@ -617,11 +617,7 @@ system initializer, generator, human, Bot;
 </system>
 	<queries>
 		<query>
-			<formula>E&lt;&gt; tasks_lost &gt; 0</formula>
-			<comment></comment>
-		</query>
-		<query>
-			<formula>Pr [&lt;=100000] ( &lt;&gt; tasks_lost != 0 )</formula>
+			<formula>Pr [&lt;=TAU] ( &lt;&gt; tasks_lost != 0 )</formula>
 			<comment></comment>
 		</query>
 	</queries>

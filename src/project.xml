@@ -3,12 +3,12 @@
 <nta>
 	<declaration>/*** GLOBAL SYSTEM PARAMETERS (1/2) ******************************************/
 
-const int N_BOTS            = 3;
-const int N_POD_ROWS        = 3;
-const int N_PODS_PER_ROW_W  = 3;
-const int N_PODS_PER_ROW_E  = 0;
+const int N_BOTS            = 5;
+const int N_POD_ROWS        = 5;
+const int N_PODS_PER_ROW_W  = 5;
+const int N_PODS_PER_ROW_E  = 5;
 const int QUEUE_CAPACITY    = 5;
-const int TASK_GEN_MEAN     = 20;
+const int TASK_GEN_MEAN     = 14;
 const int TASK_GEN_VAR      = 5;
 const int HUMAN_MEAN        = 2;
 const int HUMAN_VAR         = 1;
@@ -617,11 +617,7 @@ system initializer, generator, human, Bot;
 </system>
 	<queries>
 		<query>
-			<formula>E&lt;&gt; tasks_lost &gt; 0</formula>
-			<comment></comment>
-		</query>
-		<query>
-			<formula>Pr [&lt;=100000] ( &lt;&gt; tasks_lost != 0 )</formula>
+			<formula>Pr [&lt;=TAU] ( &lt;&gt; tasks_lost != 0 )</formula>
 			<comment></comment>
 		</query>
 	</queries>
