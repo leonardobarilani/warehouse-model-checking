@@ -15,16 +15,21 @@ the two sides of pod rows can be completely missing (i.e. having *zero* pods per
 row): in such case the highway is positioned completely west or completely east
 of the warehouse.
 
-The *human operator* can be positioned on an arbitrary cell of the highway,
-while the *entry point* can be positioned on an arbitrary cell of the warehouse
-that is not already occupied by a pod or by the human operator.
-
 \begin{figure}
 \centering
 \includegraphics[width=0.85\textwidth,height=\textheight]{build/warehouse_layout.pdf}
 \caption{Warehouse layout}
 \label{fig:wh-layout}
 \end{figure}
+
+The *human operator* can be positioned on an arbitrary cell of the highway,
+while the *entry point* can be positioned on an arbitrary cell of the warehouse
+that is not already occupied by a pod or by the human operator.
+
+The robots in the warehouse move from cell to cell according to the default
+directions defined for each cell, except for *intersection* cells where robots
+can turn and move in a different direction in order to reach a pod. The bot
+behavior and movement is described with more in detail in section \ref{bot}.
 
 The above image highlights one of the possible layouts of the warehouse as well
 as the default directions that bots will travel. In this case, we have 3 pod
