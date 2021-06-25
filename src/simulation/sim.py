@@ -23,7 +23,6 @@ import tempfile
 import signal
 
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.colors as mcolors
 from tqdm import tqdm
@@ -41,11 +40,11 @@ def format_params(params, variable_params):
 
 	pp = params.copy()
 
-	if 'N_PODS_PER_ROW_E' in variable_params:
-		variable_params['N_PODS_PER_ROW_W'] = 10 - variable_params['N_PODS_PER_ROW_E'];
+	if 'N_PODS_PER_ROW_W' in variable_params:
+		variable_params['N_PODS_PER_ROW_E'] = 10 - variable_params['N_PODS_PER_ROW_W'];
 
 	pp.update(variable_params)
-	assert pp['N_BOTS'] + pp['QUEUE_CAPACITY'] < pp['N_POD_ROWS'] * (pp['N_PODS_PER_ROW_E'] + pp['N_PODS_PER_ROW_W'])
+	assert pp['N_BOTS'] + pp['QUEUE_CAPACITY'] < pp['N_POD_ROWS'] * (pp['N_PODS_PER_ROW_W'] + pp['N_PODS_PER_ROW_E'])
 
 	return proj.format(**pp)
 
@@ -203,15 +202,15 @@ def sim1():
 	varparams = {
 		'TASK_GEN_MEAN'   : range(10, 20 + 1),
 		'QUEUE_CAPACITY'  : [1,] + list(range(5, 20 + 1, 5)),
-		'N_PODS_PER_ROW_E': range(0, 10 + 1)
+		'N_PODS_PER_ROW_W': range(0, 10 + 1)
 	}
 
 	for k, v in varparams.items():
 		if type(v) is not list:
 			varparams[k] = list(v)
 
-	keys = ['TASK_GEN_MEAN', 'QUEUE_CAPACITY', 'N_PODS_PER_ROW_E']
-	labels = ['task gen mean time', 'queue capacity', 'pods per row (east)']
+	keys = ['TASK_GEN_MEAN', 'QUEUE_CAPACITY', 'N_PODS_PER_ROW_W']
+	labels = ['TASK_GEN_MEAN', 'QUEUE_CAPACITY', 'N_PODS_PER_ROW_W\n= 10 - N_PODS_PER_ROW_E']
 	data = None
 
 	if 'gen' not in sys.argv:
@@ -230,7 +229,7 @@ def sim1():
 	ticks = [
 		varparams['TASK_GEN_MEAN'],
 		varparams['QUEUE_CAPACITY'],
-		varparams['N_PODS_PER_ROW_E'],
+		varparams['N_PODS_PER_ROW_W'],
 	]
 
 	gen_plot(*data, labels, ticks, f'{OUT_FNAME_PREFIX}_plot3d_gen_highway_qsize.png', (4, -84))
@@ -311,12 +310,12 @@ DEFAULT_PARAMS = {
 	'N_PODS_PER_ROW_E' : 3,
 	'QUEUE_CAPACITY'   : 10,
 	'TASK_GEN_MEAN'    : 1,
-	'TASK_GEN_VAR'     : 0,
+	'TASK_GEN_VAR'     : 5,
 	'HUMAN_MEAN'       : 2,
 	'HUMAN_VAR'        : 1,
 	'BOT_IDLE_EXP_RATE': 3,
 	'BOT_STEP_TIME'    : 1,
-	'TAU'              : 1000,
+	'TAU'              : 10000,
 }
 
 TEMPLATE_FNAME       = './template.xml'
