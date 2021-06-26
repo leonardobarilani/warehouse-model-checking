@@ -141,7 +141,7 @@ which tries to take a single step based on the robot's current position,
 advances one cell, otherwise it implicitly waits through the `step` channel for
 the bot that is currently occupying the cell to move.
 
-### Conflicts between robots
+## Conflicts between robots
 
 It may happen that more than one robot needs to move to the same cell. Whenever
 a robot needs to move, it first checks if the target cell is free, and if so it
