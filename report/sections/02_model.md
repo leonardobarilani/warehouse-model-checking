@@ -45,7 +45,7 @@ Global Declarations
 We model the warehouse as a 2D matrix `int map[][]`, whose size is calculated
 based on the system parameters `N_POD_ROWS` and `N_PODS_PER_ROW_{W,E}`: each
 cell holds information about its kind (pod/human/entry/intersection), wheter a
-bot is present or not, and the default directions for bots to follow. The task
+robot is present or not, and the default directions for bots to follow. The task
 queue is a simple array `int tasks[]` used as a ring buffer. Finally, we keep
 track of the availability of each pod through another global array
 `bool pod_free[]`.
@@ -114,31 +114,34 @@ The last edge that closes the cycle releseas the delivering robot through the
 ### Bot
 
 This template models a single robot and is instantiated `N_BOTS` times. The only
-template parameter is the bot's ID.
+template parameter is the robot's ID.
 
 ![Bot Timed Automata](assets/ta_bot.png){width=80%}
 
 At a high level, after entering the warehouse, each robot continuously cycles
 among four macro-states: ***pickup***, ***delivery***, ***return***, ***idle***.
-When not ***idle***, the behavior of a robot is based on its current *objective*
-and *objective position* (coordinates in the map).
+When not ***idle***, the behavior of a robot is based on its current *state* and
+*objective* (coordinates in the map). The initial state of a robot right after
+entering the warehouse is ***pickup***. The behavior of a robot at each
+macro-state is as follows:
 
-- ***Delivery***: the *objective position* corresponds to the human. Robots
-   merely follow the default direction for each cell of the warehouse (see
-   layout in figure \ref{fig:wh-layout}). These directions ensure that robots
-   always reach the highway regardless of their starting position, and then
-   cycle on the highway until the human is reached. After reaching the human,
-   the robot notifies it through the `delivery_ready` channel and waits on the
-   `human_done` channel. After this, the objective changes to ***return***.
+- ***Pickup*** or ***return***: the *objective* corresponds to the assigned pod.
+   To reach it, the robot follows the default directions for all cells *except*
+   intersections (see layout in figure \ref{fig:wh-layout}), in which case it
+   checks based on its position whether it needs to enter the aisle below the
+   wanted pod's row *or* go up because it just reached the cell right under the
+   pod *or* follow the default direction. After ***pickup*** the robot changes
+   state to ***delivery***, while after ***return*** the robot becomes
+   ***idle***.
 
-- ***Pickup*** or ***return***: the *objective position* corresponds to the
-   assigned pod. To reach it, the robot follows the default directions for all
-   cells *except* intersections (see layout in figure \ref{fig:wh-layout}), in
-   which case it checks based on its position whether it needs to enter the
-   aisle below the wanted pod's row *or* go up because it just reached the cell
-   right under the pod *or* follow the default direction. After ***pickup*** the
-   bot changes objective to ***delivery***, while after ***return*** the bot
-   becomes ***idle***.
+- ***Delivery***: the *objective* corresponds to the human. The robot merely
+   follows the default direction for each cell of the warehouse (see layout in
+   figure \ref{fig:wh-layout}). These directions ensure that robots always reach
+   the highway regardless of their starting position, and then cycle on the
+   highway until the human is reached. After reaching the human, the robot
+   signals that the pod has been delivered through the `delivery_ready` channel
+   and waits on the `human_done` channel. After this, the state changes to
+   ***return***.
 
 - ***Idle***: the robot stays under the returned pod for a minimum amount of
   time determined by an exponential probability distribution (with $\lambda =$
@@ -147,20 +150,21 @@ and *objective position* (coordinates in the map).
 
 The actual movement logic, in terms of step-by-step movements through the cells
 of the grid of the warehouse, is implemented in the `maybe_step()` function,
-which tries to take a single step based on the robot's current position,
-*objective* and *objective position*. If the movement is successful, the bot
-advances one cell, otherwise it implicitly waits through the `step` channel for
-the bot that is currently occupying the cell to move.
+which tries to take a single step based on the robot's current position, *state*
+and *objective*. If the movement is successful, the robot advances one cell,
+otherwise this means that another robot is currently occupying the target cell:
+in this case the robot implicitly waits for any other robot movement through the
+`step` channel until the target cell becomes free.
 
 ## Conflicts between robots
 
-It may happen that more than one robot needs to move to the same cell. Whenever
-a robot needs to move, it first checks if the target cell is free, and if so it
-moves to it and marks it as occupied. This conflict is implicitly solved by the
-atomicity of transitions provided by UPPAAL. Since timed automata transitions
-are executed atomically (even if happening at the same instant of time), there
-will always be only one bot moving to the target cell, and the conflict is
-avoided altogether.
+It may happen that more than one robot needs to move to the same cell at the
+same time. Whenever a robot needs to move, it first checks if the target cell is
+free, and if so it moves to it and marks it as occupied. This conflict is
+implicitly solved by the atomicity of transitions provided by UPPAAL. Since
+timed automata transitions are executed atomically (even if happening at the
+same instant of time), there will always be only one rbot moving to the target
+cell, and the conflict is avoided altogether.
 
 It may also happen that one or more robots get stuck one behind the other in
 line. In such case, the `step` urgent broadcast channel makes all robots in the
