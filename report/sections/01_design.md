@@ -52,9 +52,7 @@ SMC Tutorial[^smc-tutorial].
 - Human operator processing time with a normal distribution:
   $\mathcal{N}(\mu_H,\,\sigma_H)$
 
-The normal distributions were implemented directly as transitions on the timed
-automata following the
-[UPPAAL SMC Tutorial](http://people.cs.aau.dk/~adavid/publications/89-tutorial.pdf).
+[^smc-tutorial]: https://www.it.uu.se/research/group/darts/papers/texts/uppaal-smc-tutorial.pdf
 
 Design assumptions
 ------------------
