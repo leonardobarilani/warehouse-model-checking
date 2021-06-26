@@ -82,11 +82,20 @@ the task generation time: $\mathcal{N}(\mu_T, \sigma_T)$.
 ![TaskGenerator Timed Automata](assets/ta_taskgenerator.png){width=80%}
 
 It is composed of a single cycle of 4 edges, 3 of which model the normal
-distribution. The last edge that closes the cycle performs the actual generation
-of a task by selecting a free pod that has no robot below it and enqueueing the
-task into the global `queue` through the `enqueue()` helper function. Task
-generation is done as soon as possible after the initial delay exploiting the
-`asap` urgent broadcast channel.
+distribution. The constants `t_min` and `t_max` are defined as:
+
+\newcommand{\ffrac}[2]{\ensuremath{\frac{\displaystyle #1}{\displaystyle #2}}}
+
+\begin{center}
+\texttt{t\_min} $= \ffrac{\mu_T - \sigma_T}{3}$ \hspace{10pt}
+\texttt{t\_max} $= \ffrac{\mu_T + \sigma_T}{3}$
+\end{center}
+
+The last edge that closes the cycle performs
+the actual generation of a task by selecting a free pod that has no robot below
+it and enqueueing the task into the global `queue` through the `enqueue()`
+helper function. Task generation is done as soon as possible after the initial
+delay exploiting the `asap` urgent broadcast channel.
 
 ### Human
 
@@ -98,8 +107,9 @@ processing time: $\mathcal{N}(\mu_H, \sigma_H)$.
 
 It is composed of a single cycle of states. The first transition waits for a
 robot to show itself through the `delivery_ready` channel. Again, the following
-3 edges model the normal distribution. The last edge that closes the cycle
-releseas the delivering robot through the `human_done` channel.
+3 edges model the normal distribution in the same way as for `TaskGenerator`.
+The last edge that closes the cycle releseas the delivering robot through the
+`human_done` channel.
 
 ### Bot
 
