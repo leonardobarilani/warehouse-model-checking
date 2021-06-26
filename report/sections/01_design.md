@@ -27,9 +27,9 @@ while the *entry point* can be positioned on an arbitrary cell of the warehouse
 that is not already occupied by a pod or by the human operator.
 
 The robots in the warehouse move from cell to cell according to the default
-directions defined for each cell, except for *intersection* cells where robots
-can turn and move in a different direction in order to reach a pod. The bot
-behavior and movement is described with more in detail in section \ref{bot}.
+directions defined for each cell, except for *intersection* cells where they can
+turn and move in a different direction in order to reach a pod. The bot behavior
+and movement is described more in detail in section \ref{bot}.
 
 The above image highlights one of the possible layouts of the warehouse as well
 as the default directions that bots will travel. In this case, we have 3 pod
@@ -38,12 +38,14 @@ parameters (further described in section \ref{global-declarations}) allow
 defining a rectangular warehouse of arbitrary size with arbitrary west-to-east
 highway placement.
 
+
 Stochastic features
 -------------------
 
 We model the following stochastic features, where the normal distributions were
 implemented directly as transitions on the timed automata following the UPPAAL
-SMC Tutorial[^smc-tutorial].
+SMC
+Tutorial\footnote{https://www.it.uu.se/research/group/darts/papers/texts/uppaal-smc-tutorial.pdf}.
 
 - Time elapsed between two tasks with a normal distribution:
   $\mathcal{N}(\mu_T,\,\sigma_T)$
@@ -52,7 +54,6 @@ SMC Tutorial[^smc-tutorial].
 - Human operator processing time with a normal distribution:
   $\mathcal{N}(\mu_H,\,\sigma_H)$
 
-[^smc-tutorial]: https://www.it.uu.se/research/group/darts/papers/texts/uppaal-smc-tutorial.pdf
 
 Design assumptions
 ------------------
