@@ -45,8 +45,4 @@ fontsize: 10pt
 
 \tableofcontents
 
-\newpage
-
-\listoffigures
-
 \setlength{\belowcaptionskip}{-15pt}
