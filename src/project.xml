@@ -151,21 +151,21 @@ bool cell_is_free(pos_t p) {
 	<template>
 		<name x="5" y="5">TaskGenerator</name>
 		<parameter>const int mean, const int variance</parameter>
-		<declaration>const int u_min = (mean - variance) / 3;
-const int u_max = (mean + variance) / 3;
+		<declaration>const int t_min = (mean - variance) / 3;
+const int t_max = (mean + variance) / 3;
 clock x;</declaration>
 		<location id="id0" x="-306" y="-136">
-			<label kind="invariant" x="-323" y="-170">x &lt;= u_max</label>
+			<label kind="invariant" x="-323" y="-170">x &lt;= t_max</label>
 		</location>
-		<location id="id1" x="-153" y="-136">
-			<label kind="invariant" x="-170" y="-170">x &lt;= u_max</label>
+		<location id="id1" x="-161" y="-136">
+			<label kind="invariant" x="-178" y="-170">x &lt;= t_max</label>
 		</location>
-		<location id="id2" x="144" y="-136">
+		<location id="id2" x="119" y="-136">
 		</location>
 		<location id="id3" x="-425" y="-136">
 		</location>
-		<location id="id4" x="4" y="-136">
-			<label kind="invariant" x="-13" y="-170">x &lt;= u_max</label>
+		<location id="id4" x="-21" y="-136">
+			<label kind="invariant" x="-38" y="-170">x &lt;= t_max</label>
 		</location>
 		<init ref="id3"/>
 		<transition>
@@ -180,69 +180,69 @@ clock x;</declaration>
 			<label kind="guard" x="-289" y="-76">pod_free[pod_id] &amp;&amp; cell_is_free(pod_position[pod_id])</label>
 			<label kind="synchronisation" x="-289" y="-59">asap!</label>
 			<label kind="assignment" x="-289" y="-42">enqueue(pod_id), x = 0</label>
-			<nail x="144" y="-102"/>
+			<nail x="119" y="-102"/>
 			<nail x="-25" y="-102"/>
 			<nail x="-306" y="-102"/>
 		</transition>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id4"/>
-			<label kind="guard" x="-136" y="-153">x &gt;= u_min</label>
-			<label kind="assignment" x="-136" y="-136">x = 0</label>
+			<label kind="guard" x="-144" y="-153">x &gt;= t_min</label>
+			<label kind="assignment" x="-144" y="-136">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-289" y="-153">x &gt;= u_min</label>
+			<label kind="guard" x="-289" y="-153">x &gt;= t_min</label>
 			<label kind="assignment" x="-289" y="-136">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id4"/>
 			<target ref="id2"/>
-			<label kind="guard" x="21" y="-153">x &gt;= u_min</label>
-			<label kind="assignment" x="21" y="-136">x = 0</label>
+			<label kind="guard" x="-4" y="-153">x &gt;= t_min</label>
+			<label kind="assignment" x="-4" y="-136">x = 0</label>
 		</transition>
 	</template>
 	<template>
 		<name>Human</name>
 		<parameter>const int mean, const int variance</parameter>
-		<declaration>const int u_min = (mean - variance) / 3;
-const int u_max = (mean + variance) / 3;
+		<declaration>const int t_min = (mean - variance) / 3;
+const int t_max = (mean + variance) / 3;
 clock x;</declaration>
 		<location id="id5" x="-85" y="-76">
 		</location>
 		<location id="id6" x="161" y="-76">
-			<label kind="invariant" x="170" y="-102">x &lt;= u_max</label>
+			<label kind="invariant" x="153" y="-110">x &lt;= t_max</label>
 		</location>
 		<location id="id7" x="289" y="-76">
-			<label kind="invariant" x="306" y="-102">x &lt;= u_max</label>
+			<label kind="invariant" x="280" y="-110">x &lt;= t_max</label>
 		</location>
 		<location id="id8" x="17" y="-76">
 		</location>
-		<location id="id9" x="561" y="-76">
+		<location id="id9" x="552" y="-76">
 		</location>
 		<location id="id10" x="425" y="-76">
-			<label kind="invariant" x="442" y="-102">x &lt;= u_max</label>
+			<label kind="invariant" x="416" y="-110">x &lt;= t_max</label>
 		</location>
 		<init ref="id5"/>
 		<transition>
 			<source ref="id9"/>
 			<target ref="id8"/>
-			<label kind="synchronisation" x="459" y="-51">human_done!</label>
-			<nail x="561" y="-25"/>
+			<label kind="synchronisation" x="450" y="-51">human_done!</label>
+			<nail x="552" y="-25"/>
 			<nail x="17" y="-25"/>
 		</transition>
 		<transition>
 			<source ref="id7"/>
 			<target ref="id10"/>
-			<label kind="guard" x="306" y="-136">x &gt;= u_min</label>
-			<label kind="assignment" x="305" y="-119">x = 0</label>
+			<label kind="guard" x="306" y="-93">x &gt;= t_min</label>
+			<label kind="assignment" x="305" y="-76">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id6"/>
 			<target ref="id7"/>
-			<label kind="guard" x="170" y="-136">x &gt;= u_min</label>
-			<label kind="assignment" x="170" y="-119">x = 0</label>
+			<label kind="guard" x="178" y="-93">x &gt;= t_min</label>
+			<label kind="assignment" x="178" y="-76">x = 0</label>
 		</transition>
 		<transition>
 			<source ref="id8"/>
@@ -258,8 +258,8 @@ clock x;</declaration>
 		<transition>
 			<source ref="id10"/>
 			<target ref="id9"/>
-			<label kind="guard" x="442" y="-136">x &gt;= u_min</label>
-			<label kind="assignment" x="441" y="-119">x = 0</label>
+			<label kind="guard" x="442" y="-93">x &gt;= t_min</label>
+			<label kind="assignment" x="441" y="-76">x = 0</label>
 		</transition>
 	</template>
 	<template>
