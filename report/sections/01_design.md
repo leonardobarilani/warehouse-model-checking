@@ -41,7 +41,9 @@ highway placement.
 Stochastic features
 -------------------
 
-We model the following stochastic features:
+We model the following stochastic features, where the normal distributions were
+implemented directly as transitions on the timed automata following the UPPAAL
+SMC Tutorial[^smc-tutorial].
 
 - Time elapsed between two tasks with a normal distribution:
   $\mathcal{N}(\mu_T,\,\sigma_T)$
@@ -68,3 +70,5 @@ in order for the model to be simulated correctly and meaningfully:
 2. Pods with idle bots underneath cannot be assigned to any bot as a new task.
    This implies that no bot can be assigned a task corresponding to the same pod
    twice in a row.
+3. Entry point and human operator are placed on valid cells, that is: human on
+   one of the cells of the highway and entry on any other cell that is not a pod.

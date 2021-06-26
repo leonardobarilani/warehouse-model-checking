@@ -178,9 +178,9 @@ def gen_plot(x, y, z, v, labels, ticks, fname, view_init):
 	cbar = fig.colorbar(img, shrink=0.5, ticks=[min(v), 0.5, max(v)])
 
 	# axis labels
-	ax.set_xlabel(labels[0])
-	ax.set_ylabel(labels[1])
-	ax.set_zlabel(labels[2])
+	ax.set_xlabel(labels[0], fontsize=12, labelpad=10)
+	ax.set_ylabel(labels[1], fontsize=12, labelpad=5)
+	ax.set_zlabel(labels[2], fontsize=12, labelpad=10)
 
 	# axis ticks
 	ax.xaxis.set_ticks(ticks[0])
@@ -194,10 +194,6 @@ def gen_plot(x, y, z, v, labels, ticks, fname, view_init):
 
 def sim1():
 	params = DEFAULT_PARAMS.copy()
-	params.update({
-		'N_BOTS'    : 5,
-		'N_POD_ROWS': 5,
-	})
 
 	varparams = {
 		'TASK_GEN_MEAN'   : range(10, 20 + 1),
@@ -236,11 +232,14 @@ def sim1():
 
 def sim2():
 	params = DEFAULT_PARAMS.copy()
+	params.update({
+		'TASK_GEN_VAR': 1
+	})
 
 	varparams = {
-		'TASK_GEN_MEAN': range(10, 20 + 1),
-		'N_BOTS': range(1, 10 + 1),
-		'QUEUE_CAPACITY': [1,] + list(range(5, 25 + 1, 5))
+		'TASK_GEN_MEAN' : range(5, 20 + 1),
+		'N_BOTS'        : range(3, 10 + 1),
+		'QUEUE_CAPACITY': range(1, 10 + 1)
 	}
 
 	for k, v in varparams.items():
@@ -248,7 +247,7 @@ def sim2():
 			varparams[k] = list(v)
 
 	keys = ['TASK_GEN_MEAN', 'QUEUE_CAPACITY', 'N_BOTS']
-	labels = ['task gen mean time', 'queue capacity', 'n bots']
+	labels = ['TASK_GEN_MEAN', 'QUEUE_CAPACITY', 'N_BOTS']
 	data = None
 
 	if 'gen' not in sys.argv:
@@ -266,7 +265,7 @@ def sim2():
 
 	ticks = [
 		varparams['TASK_GEN_MEAN'],
-		[1, 5, 15, 25],
+		varparams['QUEUE_CAPACITY'],
 		varparams['N_BOTS'],
 	]
 
@@ -290,7 +289,7 @@ def main():
 	OUT_FNAME_PREFIX = os.path.join('out', TEMPLATE_FNAME[:-4])
 
 	sim1()
-	#sim2()
+	sim2()
 
 ################################################################################
 
@@ -306,8 +305,8 @@ COLOR_MAP = mcolors.LinearSegmentedColormap('gyr', COLOR_DICT, 100)
 DEFAULT_PARAMS = {
 	'N_BOTS'           : 5,
 	'N_POD_ROWS'       : 5,
-	'N_PODS_PER_ROW_W' : 3,
-	'N_PODS_PER_ROW_E' : 3,
+	'N_PODS_PER_ROW_W' : 5,
+	'N_PODS_PER_ROW_E' : 5,
 	'QUEUE_CAPACITY'   : 10,
 	'TASK_GEN_MEAN'    : 1,
 	'TASK_GEN_VAR'     : 5,
