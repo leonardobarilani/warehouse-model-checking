@@ -3,18 +3,35 @@
 <nta>
 	<declaration>/*** GLOBAL SYSTEM PARAMETERS (1/2) ******************************************/
 
-const int N_BOTS            = 5;
+// Efficient warehouse configuration (tasks losts with very *low* probability)
+const int N_BOTS            = 10;
 const int N_POD_ROWS        = 5;
 const int N_PODS_PER_ROW_W  = 5;
 const int N_PODS_PER_ROW_E  = 5;
 const int QUEUE_CAPACITY    = 5;
-const int TASK_GEN_MEAN     = 14;
+const int TASK_GEN_MEAN     = 8;
 const int TASK_GEN_VAR      = 5;
 const int HUMAN_MEAN        = 2;
 const int HUMAN_VAR         = 1;
 const int BOT_IDLE_EXP_RATE = 3;
 const int BOT_STEP_TIME     = 1;
 const int TAU               = 10000;
+
+// Inefficient warehouse configuration (tasks losts with very *high* probability)
+/*
+const int N_BOTS            = 7;
+const int N_POD_ROWS        = 5;
+const int N_PODS_PER_ROW_W  = 5;
+const int N_PODS_PER_ROW_E  = 5;
+const int QUEUE_CAPACITY    = 10;
+const int TASK_GEN_MEAN     = 10;
+const int TASK_GEN_VAR      = 5;
+const int HUMAN_MEAN        = 2;
+const int HUMAN_VAR         = 1;
+const int BOT_IDLE_EXP_RATE = 3;
+const int BOT_STEP_TIME     = 1;
+const int TAU               = 10000;
+*/
 
 /*** GLOBAL *DERIVED* SYSTEM PARAMETERS **************************************/
 
@@ -69,6 +86,7 @@ int queue_tail = 0;
 
 int tasks_lost      = 0; // n. of tasks lost because the queue was full
 int tasks_completed = 0; // n. of tasks succesfully completed (pickup + delivery + return)
+int tasks_in_queue  = 0; // n. of tasks in the queue (only used for analytical purposes)
 
 /*** CHANNELS ****************************************************************/
 
@@ -95,6 +113,7 @@ void enqueue(int pod_id) {
     queue[queue_head] = pod_id;
     queue_head = (queue_head + 1) % QUEUE_SIZE;
     pod_free[pod_id] = false;
+    tasks_in_queue++;
 }
 
 /*
@@ -104,6 +123,7 @@ int dequeue() {
     int el = queue[queue_tail];
     queue[queue_tail] = NONE;
     queue_tail = (queue_tail + 1) % QUEUE_SIZE;
+    tasks_in_queue--;
     return el;
 }
 
@@ -126,7 +146,8 @@ int cell(pos_t p) {
  */
 bool cell_is_free(pos_t p) {
     return !(cell(p) &amp; B);
-}</declaration>
+}
+</declaration>
 	<template>
 		<name x="5" y="5">TaskGenerator</name>
 		<parameter>const int mean, const int variance</parameter>
@@ -354,8 +375,6 @@ const int OBJ_RETURN = 3;
 clock x;
 clock task_time;
 clock idle_time;
-int   entered       = 0;
-int   idle          = 0;
 pos_t pos           = {-1, -1};
 pos_t objective_pos = {-1, -1};
 pod_t pod_id        = 0;
@@ -379,8 +398,6 @@ void update_objective(const int obj) {
  * assigned objective.
  */
 void enter() {
-    entered = 1;
-    idle = 0;
     pos = ENTRY_POS;
     map[pos.r][pos.c] |= B;
 }
@@ -401,7 +418,6 @@ void get_task() {
  * its original position in the map.
  */
 void complete_task() {
-    idle = 1;
     idle_time = 0;
     pod_free[pod_id] = true;
     pod_id = 0;
@@ -512,6 +528,7 @@ void maybe_step() {
 			<label kind="exponentialrate" x="-442" y="349">BOT_IDLE_EXP_RATE</label>
 		</location>
 		<location id="id20" x="-348" y="-25">
+			<name x="-358" y="-59">kek</name>
 			<committed/>
 		</location>
 		<init ref="id13"/>
@@ -626,16 +643,12 @@ human       = Human(HUMAN_MEAN, HUMAN_VAR);
 system initializer, generator, human, Bot;</system>
 	<queries>
 		<query>
-			<formula>Pr [&lt;=TAU] ( &lt;&gt; tasks_lost != 0 )</formula>
+			<formula>Pr [&lt;=TAU] ( &lt;&gt; tasks_lost &gt; 0 )</formula>
 			<comment>Probability of losing a task (exceeding the queue capacity) at any given time.</comment>
 		</query>
 		<query>
-			<formula>E [&lt;= TAU; 1000] ( max: (sum(i:bot_t) Bot(i).task_time * Bot(i).entered) / N_BOTS )</formula>
-			<comment>Probability distribution of the average maximum time for the bots to complete a single task.</comment>
-		</query>
-		<query>
-			<formula>E [&lt;= TAU; 1000] ( max: (sum(i:bot_t) Bot(i).idle_time * Bot(i).entered) / N_BOTS )</formula>
-			<comment>Probability distribution of the average maximum idle time for the bots.</comment>
+			<formula>E [&lt;= TAU; 1000] ( max: tasks_in_queue )</formula>
+			<comment>Expected maximum number of tasks in the queue during the simulation.</comment>
 		</query>
 		<query>
 			<formula></formula>
