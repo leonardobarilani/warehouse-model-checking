@@ -66,12 +66,12 @@ Templates
 
 ### Initializer
 
-![Initializer Timed Automata](assets/ta_initializer.png){width=25%}
+![Initializer Timed Automaton](assets/ta_initializer.png){width=25%}
 
-This is a dummy timed automata which only has one transition which executes
+This is a dummy timed automaton which only has one transition which executes
 immediately as the initial state is committed. The `initialize_all()` function
-generates the map and initializes global variables. All the other timed automata
-of the system are signaled to start through the `init_done` channel.
+generates the map and initializes global variables. All the other timed
+automaton of the system are signaled to start through the `init_done` channel.
 
 ### TaskGenerator
 
@@ -79,7 +79,7 @@ This template models the incoming requests for the packages to the warehouse. It
 takes a mean and variance as parameter to describe the normal distribution for
 the task generation time: $\mathcal{N}(\mu_T, \sigma_T)$.
 
-![TaskGenerator Timed Automata](assets/ta_taskgenerator.png){width=80%}
+![TaskGenerator Timed Automaton](assets/ta_taskgenerator.png){width=80%}
 
 It is composed of a single cycle of 4 edges, 3 of which model the normal
 distribution. The constants `t_min` and `t_max` are defined as:
@@ -103,7 +103,7 @@ This template models the behaviour of the human operator. It takes a mean and
 variance as parameter to describe the normal distribution for the operator
 processing time: $\mathcal{N}(\mu_H, \sigma_H)$.
 
-![Human Timed Automata](assets/ta_human.png){width=80%}
+![Human Timed Automaton](assets/ta_human.png){width=80%}
 
 It is composed of a single cycle of states. The first transition waits for a
 robot to show itself through the `delivery_ready` channel. Again, the following
@@ -116,7 +116,7 @@ The last edge that closes the cycle releseas the delivering robot through the
 This template models a single robot and is instantiated `N_BOTS` times. The only
 template parameter is the robot's ID.
 
-![Bot Timed Automata](assets/ta_bot.png){width=80%}
+![Bot Timed Automaton](assets/ta_bot.png){width=80%}
 
 At a high level, after entering the warehouse, each robot continuously cycles
 among four macro-states: ***pickup***, ***delivery***, ***return***, ***idle***.
