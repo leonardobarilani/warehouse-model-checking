@@ -66,11 +66,12 @@ Templates
 
 ### Initializer
 
+![Initializer Timed Automata](assets/ta_initializer.png){width=25%}
+
 This is a dummy timed automata which only has one transition which executes
-immediately as the initial state is committed. On the transition, an
-initialization function is executed to initialize the whole system performing
-map generation and global variable initialization according to system
-parameters.
+immediately as the initial state is committed. The `initialize_all()` function
+generates the map and initializes global variables. All the other timed automata
+of the system are signaled to start through the `init_done` channel.
 
 ### TaskGenerator
 
