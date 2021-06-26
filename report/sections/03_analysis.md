@@ -1,21 +1,32 @@
 Analysis and results
 ====================
 
-Model analysis
---------------
+We first performed a multi-parameter analysis to find meaningful system
+configurations, then extracted two non-trivial configurations to test analyze
+the system under the two requested scenarios: one with high efficiency and one
+with low efficiency.
 
-In order to find meaningful configurations, we analyzed the probability of
-losing any task (i.e. exceeding the task queue capacity) through the following
-query:
+Multi-parameter analysis
+------------------------
 
+We analyzed the warehouse efficiency in terms of the probability of losing any
+task (i.e. exceeding the task queue capacity) through the following query:
+
+\vspace{-10pt}
 \begin{center}\texttt{Pr [<= TAU] (<> tasks\_lost > 0)}\end{center}
+\vspace{-10pt}
 
-We ran two different multi-parameter tests of the same query varying 3 different
-parameters at a time using the `verifyta`[^verifyta] command line tool and
-plotting the results. In both tests the entry point and the human operator are
-always respectively at the north-east and south-east cell of the highway. All
-SMC parameters were left at their default values except for *probability
-uncertainty* which we set to $\epsilon = 0.01$ to get more accurate results.
+We built an ad-hoc Python test suite\footnote{For more information, see
+README.md at https://github.com/leonardobarilani/warehouse-model-checking} to
+vary 3 independent parameters in different ranges, verifying each different
+configuration using the
+`verifyta`\footnote{https://docs.uppaal.org/toolsandapi/verifyta} command line
+tool bundled with UPPAAL
+4.1.25\footnote{https://uppaal.org/downloads/other/\#uppaal-41}, plotting the
+results using Matplotlib\footnote{https://matplotlib.org}. In the end, we
+extracted two meaningful tests, both of which were configured with the following
+parameters and run with default SMC parameters except for *probability
+uncertainty* set to $\varepsilon = 0.01$.
 
 \bgroup
 \def\arraystretch{0.8}
@@ -52,18 +63,23 @@ to West of the warehouse. The main purpose of **Test B** is to asses the impact
 of the queue capacity under different task generation frequencies and with
 different numbers of robots.
 
-![4D plots of test results - one dot per data point](assets/4d_plots.png)
+![4D plots of probability of losing tasks - one data point per configuration](assets/4d_plots.png)
 
 From the results of **Test A**, we conclude that (unsurprisingly) a centered
-highway placement is better than a lateral one. From **Test B**, we conclude
-that **the capacity of the task queue only marginally affects the efficiency of
-the warehouse**: a small queue capacity ($< 5$) is enough in any configuration
-where the robots are capable of completing tasks in a timely manner, otherwise
-*even with higher queue capacities* the queue will eventually fill up and tasks
-will start getting lost (in these situations, there always exists a `TAU` large
-enough for the warehouse to start losing tasks).
+highway placement is better than a lateral one. From the results of **Test B**,
+we observe that *the capacity of the task queue only marginally affects the
+efficiency of the warehouse*. The probability of not losing tasks does not scale
+linearly along with the queue capacity. Fixed other system parameters, there
+seems to be a clear breakpoint for the queue capacity before which losing tasks
+is very likely and after which is very unlikely. Choosing a capacity that is
+above this breakpoint is thus unneeded.
 
-[^verifyta]: https://docs.uppaal.org/toolsandapi/verifyta
+From the above graph for **Test B**, we can in fact see that for a warehouse of
+50 pods with a centered highway, if the bots are capable of completing tasks in
+a timely manner, a queue capacity of 4 is enough to not lose tasks even in the
+most stressful system configurations, otherwise *higher queue capacities* do not
+solve the problem; the queue will eventually fill up and tasks will start
+getting lost.
 
 
 First property: efficient warehouse
