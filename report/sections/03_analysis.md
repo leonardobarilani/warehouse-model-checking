@@ -18,21 +18,30 @@ SMC parameters were left at their default values except for *probability
 uncertainty* which we set to $\epsilon = 0.01$ to get more accurate results.
 
 \bgroup
-\def\arraystretch{0.75}
-| **Parameter**       | **Test A**                                | **Test B**                       |
-|:--------------------|:------------------------------------------|:---------------------------------|
-| `N_BOTS`            | 5                                         | $\in [3, 10] \subset \mathbb{N}$ |
-| `N_POD_ROWS`        | 5                                         | 5                                |
-| `N_PODS_PER_ROW_W`  | $\in [0, 10] \subset \mathbb{N}$          | 5                                |
-| `N_PODS_PER_ROW_E`  | 10 $-$ \texttt{N\_PODS\_PER\_ROW\_W}      | 5                                |
-| `QUEUE_CAPACITY`    | $\in [1, 5, 10, 15, 20]$                  | $\in [1, 10] \subset \mathbb{N}$ |
-| `TASK_GEN_MEAN`     | $\in [10, 20] \subset \mathbb{N}$         | $\in [5, 20] \subset \mathbb{N}$ |
-| `TASK_GEN_VAR`      | 5                                         | 1                                |
-| `HUMAN_MEAN`        | 2                                         | 2                                |
-| `HUMAN_VAR`         | 1                                         | 1                                |
-| `BOT_IDLE_EXP_RATE` | 3                                         | 3                                |
-| `BOT_STEP_TIME`     | 1                                         | 1                                |
-| `TAU`               | 10000                                     | 10000                            |
+\def\arraystretch{0.8}
+\begin{center}
+\rowcolors{2}{gray!10}{white}
+\begin{tabular}{ | l | l | l | }
+	\hline
+	\textbf{System parameter} & \textbf{Test A value} & \textbf{Test B value}\\
+	\hline
+	\texttt{N\_BOTS}                          & 5                                    & $\in [3, 10] \subset \mathbb{N}$ \\
+	\texttt{N\_POD\_ROWS}                     & 5                                    & 5                                \\
+	\texttt{N\_PODS\_PER\_ROW\_W}             & $\in [0, 10] \subset \mathbb{N}$     & 5                                \\
+	\texttt{N\_PODS\_PER\_ROW\_E}             & 10 $-$ \texttt{N\_PODS\_PER\_ROW\_W} & 5                                \\
+	\texttt{QUEUE\_CAPACITY}                  & $\in [1, 5, 10, 15, 20]$             & $\in [1, 10] \subset \mathbb{N}$ \\
+	\texttt{TASK\_GEN\_MEAN} ($\mu_T$)        & $\in [10, 20] \subset \mathbb{N}$    & $\in [5, 20] \subset \mathbb{N}$ \\
+	\texttt{TASK\_GEN\_VAR} ($\sigma_T$)      & 5                                    & 1                                \\
+	\texttt{HUMAN\_MEAN} ($\mu_H$)            & 2                                    & 2                                \\
+	\texttt{HUMAN\_VAR} ($\sigma_H$)          & 1                                    & 1                                \\
+	\texttt{BOT\_IDLE\_EXP\_RATE} ($\lambda$) & 3                                    & 3                                \\
+	\texttt{BOT\_STEP\_TIME}                  & 1                                    & 1                                \\
+	\texttt{ENTRY\_POS}                       & top of highway east column           & top of highway east column       \\
+	\texttt{ENTRY\_POS}                       & bottom of highway east column        & bottom of highway east column    \\
+	\texttt{TAU}                              & 10000                                & 10000                            \\
+	\hline
+\end{tabular}
+\end{center}
 \egroup
 
 \todo{maybe fix queue capacity and vary N\_BOTS on test A?}
