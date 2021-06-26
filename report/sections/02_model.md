@@ -6,6 +6,8 @@ Global Declarations
 
 ### System parameters
 
+\bgroup
+\def\arraystretch{0.8}
 +---------------------+----------------------------------------------------------+
 | `N_BOTS`            | Number of robots in the warehouse                        |
 +---------------------+----------------------------------------------------------+
@@ -30,8 +32,13 @@ Global Declarations
 +---------------------+----------------------------------------------------------+
 | `BOT_STEP_TIME`     | Time needed for a robot to move between adjacent tiles   |
 +---------------------+----------------------------------------------------------+
+| `ENTRY_POS`         | Entry point position (coordinates)                       |
++---------------------+----------------------------------------------------------+
+| `HUMAN_POS`         | Human operator position (coordinates)                    |
++---------------------+----------------------------------------------------------+
 | `TAU`               | Upper time bound for verification                        |
 +---------------------+----------------------------------------------------------+
+\egroup
 
 ### Variables and channels
 
@@ -39,8 +46,9 @@ We model the warehouse as a 2D matrix `int map[][]`, whose size is calculated
 based on the system parameters `N_POD_ROWS` and `N_PODS_PER_ROW_{W,E}`: each
 cell holds information about its kind (pod/human/entry/intersection), wheter a
 bot is present or not, and the default directions for bots to follow. The task
-queue is a simple array `int tasks[]` used as a ring buffer. The availability of
-each pod is kept track of through another global array `bool pod_free[]`.
+queue is a simple array `int tasks[]` used as a ring buffer. Finally, we keep
+track of the availability of each pod through another global array
+`bool pod_free[]`.
 
 For synchronization purposes we define the following channels, which are *all*
 `urgent broadcast`:
@@ -115,11 +123,11 @@ and *objective position* (coordinates in the map).
 - ***Pickup*** or ***return***: the *objective position* corresponds to the
    assigned pod. To reach it, the robot follows the default directions for all
    cells *except* intersections (see layout in figure \ref{fig:wh-layout}), in
-   which case it checks based on its position whether it needs to [1] enter the
-   aisle below the wanted pod's row or [2] go up because it just reached the
-   cell right under the pod or [3] follow the default direction. After
-   ***pickup*** the bot changes objective to ***delivery***, while after
-   ***return*** the bot becomes ***idle***.
+   which case it checks based on its position whether it needs to enter the
+   aisle below the wanted pod's row *or* go up because it just reached the cell
+   right under the pod *or* follow the default direction. After ***pickup*** the
+   bot changes objective to ***delivery***, while after ***return*** the bot
+   becomes ***idle***.
 
 - ***Idle***: the robot stays under the returned pod for a minimum amount of
   time determined by an exponential probability distribution (with $\lambda =$
