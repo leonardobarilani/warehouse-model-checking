@@ -16,8 +16,8 @@ task (i.e. exceeding the task queue capacity) through the following query:
 \begin{center}\texttt{Pr [<= TAU] (<> tasks\_lost > 0)}\end{center}
 \vspace{-10pt}
 
-We built an ad-hoc Python test suite\footnote{For more information, see
-README.md at https://github.com/leonardobarilani/warehouse-model-checking} to
+We built an ad-hoc Python test suite\footnote{Source code available at
+https://github.com/leonardobarilani/warehouse-model-checking (see README.md)} to
 vary 3 independent parameters in different ranges, verifying each different
 configuration using the
 `verifyta`\footnote{https://docs.uppaal.org/toolsandapi/verifyta} command line
@@ -55,13 +55,13 @@ uncertainty* set to $\varepsilon = 0.01$.
 \end{center}
 \egroup
 
-\todo{maybe fix queue capacity and vary N\_BOTS on test A?}
-
 The main purpose of **Test A** is to asses the effect of different highway
-placements: on the vertical axis we vary the position of the highway from East
-to West of the warehouse. The main purpose of **Test B** is to asses the impact
-of the queue capacity under different task generation frequencies and with
-different numbers of robots.
+placements: we keep the number of pods and pod rows fixed and vary the position
+of the highway from East to West of the warehouse.
+
+The main purpose of **Test B** is to asses the impact of the queue capacity
+under different task generation frequencies and with different workloads (task
+generation mean time) and different numbers of robots.
 
 ![4D plots of probability of losing tasks - one data point per configuration](assets/4d_plots.png)
 
