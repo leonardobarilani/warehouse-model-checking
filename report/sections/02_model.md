@@ -8,36 +8,29 @@ Global Declarations
 
 \bgroup
 \def\arraystretch{0.8}
-+---------------------+----------------------------------------------------------+
-| `N_BOTS`            | Number of robots in the warehouse                        |
-+---------------------+----------------------------------------------------------+
-| `N_POD_ROWS`        | Number of rows of pods in the warehouse                  |
-+---------------------+----------------------------------------------------------+
-| `N_PODS_PER_ROW_W`  | Number of pods per single row on the warehouse West side |
-+---------------------+----------------------------------------------------------+
-| `N_PODS_PER_ROW_E`  | Number of pods per single row on the warehouse East side |
-+---------------------+----------------------------------------------------------+
-| `QUEUE_CAPACITY`    | Capacity of the tasks' queue                             |
-+---------------------+----------------------------------------------------------+
-| `TASK_GEN_MEAN`     | Task generation mean time ($\mu_T$)                      |
-+---------------------+----------------------------------------------------------+
-| `TASK_GEN_VAR`      | Task generation time variance ($\sigma_T$)               |
-+---------------------+----------------------------------------------------------+
-| `HUMAN_MEAN`        | Human operator mean reaction time ($\mu_H$)              |
-+---------------------+----------------------------------------------------------+
-| `HUMAN_VAR`         | Human operator reaction time variance ($\sigma_H$)       |
-+---------------------+----------------------------------------------------------+
-| `BOT_IDLE_EXP_RATE` | Robot task claim delay ($\lambda$ of exponential         |
-|                     | distribution)                                            |
-+---------------------+----------------------------------------------------------+
-| `BOT_STEP_TIME`     | Time needed for a robot to move between adjacent tiles   |
-+---------------------+----------------------------------------------------------+
-| `ENTRY_POS`         | Entry point position (coordinates)                       |
-+---------------------+----------------------------------------------------------+
-| `HUMAN_POS`         | Human operator position (coordinates)                    |
-+---------------------+----------------------------------------------------------+
-| `TAU`               | Upper time bound for verification                        |
-+---------------------+----------------------------------------------------------+
+\begin{center}
+\rowcolors{2}{gray!10}{white}
+\begin{tabular}{ | l | l | }
+	\hline
+	\textbf{Parameter} & \textbf{Description} \\
+	\hline
+	\texttt{N\_BOTS}              & Number of robots in the warehouse \\
+	\texttt{N\_POD\_ROWS}         & Number of rows of pods in the warehouse \\
+	\texttt{N\_PODS\_PER\_ROW\_W} & Number of pods per single row on the warehouse West side \\
+	\texttt{N\_PODS\_PER\_ROW\_E} & Number of pods per single row on the warehouse East side \\
+	\texttt{QUEUE\_CAPACITY}      & Capacity of the tasks' queue \\
+	\texttt{TASK\_GEN\_MEAN}      & Task generation mean time ($\mu_T$) \\
+	\texttt{TASK\_GEN\_VAR}       & Task generation time variance ($\sigma_T$) \\
+	\texttt{HUMAN\_MEAN}          & Human operator mean reaction time ($\mu_H$) \\
+	\texttt{HUMAN\_VAR}           & Human operator reaction time variance ($\sigma_H$) \\
+	\texttt{BOT\_IDLE\_EXP\_RATE} & Robot task claim delay ($\lambda$ of exponential distribution) \\
+	\texttt{BOT\_STEP\_TIME}      & Time needed for a robot to move between adjacent tiles \\
+	\texttt{ENTRY\_POS}           & Entry point position (coordinates) \\
+	\texttt{HUMAN\_POS}           & Human operator position (coordinates) \\
+	\texttt{TAU}                  & Upper time bound for verification \\
+	\hline
+\end{tabular}
+\end{center}
 \egroup
 
 ### Variables and channels
@@ -126,22 +119,22 @@ entering the warehouse is ***pickup***. The behavior of a robot at each
 macro-state is as follows:
 
 - ***Pickup*** or ***return***: the *objective* corresponds to the assigned pod.
-   To reach it, the robot follows the default directions for all cells *except*
-   intersections (see layout in figure \ref{fig:wh-layout}), in which case it
-   checks based on its position whether it needs to enter the aisle below the
-   wanted pod's row *or* go up because it just reached the cell right under the
-   pod *or* follow the default direction. After ***pickup*** the robot changes
-   state to ***delivery***, while after ***return*** the robot becomes
-   ***idle***.
+  To reach it, the robot follows the default directions for all cells *except*
+  intersections (see layout in figure \ref{fig:wh-layout}), in which case it
+  checks based on its position whether it needs to enter the aisle below the
+  wanted pod's row *or* go up because it just reached the cell right under the
+  pod *or* follow the default direction. After ***pickup*** the robot changes
+  state to ***delivery***, while after ***return*** the robot becomes
+  ***idle***.
 
 - ***Delivery***: the *objective* corresponds to the human. The robot merely
-   follows the default direction for each cell of the warehouse (see layout in
-   figure \ref{fig:wh-layout}). These directions ensure that robots always reach
-   the highway regardless of their starting position, and then cycle on the
-   highway until the human is reached. After reaching the human, the robot
-   signals that the pod has been delivered through the `delivery_ready` channel
-   and waits on the `human_done` channel. After this, the state changes to
-   ***return***.
+  follows the default direction for each cell of the warehouse (see layout in
+  figure \ref{fig:wh-layout}). These directions ensure that robots always reach
+  the highway regardless of their starting position, and then cycle on the
+  highway until the human is reached. After reaching the human, the robot
+  signals that the pod has been delivered through the `delivery_ready` channel
+  and waits on the `human_done` channel. After this, the state changes to
+  ***return***.
 
 - ***Idle***: the robot stays under the returned pod for a minimum amount of
   time determined by an exponential probability distribution (with $\lambda =$
