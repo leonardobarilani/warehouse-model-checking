@@ -2,7 +2,7 @@
 title: "Model Checking of Warehouse Robotics"
 subtitle: "\\textbf{Project Report}\\newline Formal Methods for Concurrent and Real-Time Systems"
 author: ["Leonardo Barilani", "Marco Bonelli"]
-date: "June 29th, 2021 \\newline Version 1.0"
+date: "June 27th, 2021"
 titlepage: true
 logo: "assets/polimi-logo.pdf"
 logo-width: 250
@@ -33,7 +33,7 @@ fontsize: 10pt
 				Livia Lestingi \\
 				Pierluigi San Pietro \\
 			\end{tabular} \\
-			Version: & 1.0 \\
+			Version: & 1.1 \\
 			Date: & 2021-06-27 \\
 			Source: & \url{https://github.com/leonardobarilani/warehouse-model-checking} \\
 			Copyright: & © 2021 Leonardo Barilani, Marco Bonelli \\
