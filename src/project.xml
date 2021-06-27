@@ -55,12 +55,11 @@ typedef struct { int r, c; } pos_t;
 
 /*** GLOBAL SYSTEM PARAMETERS (2/2) ******************************************/
 
-// Entry and Human can have arbitrary positions as long as the human is on the
-// highway and the entry point is on any different valid cell.
-// To simplify things, here we just put Entry and Human respectively at the top
-// and bottom of the East column of the highway.
-const pos_t ENTRY_POS = { 0        , HIGHWAY_E_COL };
+// Entry and Human can have arbitrary positions as long as they are *on the highway*.
+// Here we just put the Human at the bottom of the highway west column and the
+// Entry at the top of the highway east column.
 const pos_t HUMAN_POS = { MAP_H - 1, HIGHWAY_E_COL };
+const pos_t ENTRY_POS = { 0        , HIGHWAY_E_COL };
 
 /*** GLOBAL CONSTANTS ********************************************************/
 
