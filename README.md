@@ -7,6 +7,12 @@ Master's Degree course [*Formal Methods for Concurrent and Real-Time Systems*
 project is to model the core entities of an automated warehouse and verify its
 efficiency through the [UPPAAL][uppaal] modeling tool.
 
+Both the [project assignment](doc/assignment.pdf) and the
+[final report document](doc/report.pdf) submitted for validation can be found in
+the [`doc/`](doc) folder.
+
+Authors:
+
 | Name              | Student ID | Academic e-mail address          |
 |:----------------- |:-----------|:---------------------------------|
 | Barilani Leonardo | 10528015   | leonardo.barilani@mail.polimi.it |
