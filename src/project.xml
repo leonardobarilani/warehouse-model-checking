@@ -650,8 +650,12 @@ system initializer, generator, human, Bot;</system>
 			<comment>Expected maximum number of tasks in the queue during the simulation.</comment>
 		</query>
 		<query>
-			<formula></formula>
-			<comment></comment>
+			<formula>E [&lt;= TAU; 1000] ( max: tasks_lost )</formula>
+			<comment>Expected maximum number of tasks lost during the simulation.</comment>
+		</query>
+		<query>
+			<formula>E [&lt;= TAU; 1000] ( max: tasks_completed )</formula>
+			<comment>Expected maximum number of tasks completed during the simulation.</comment>
 		</query>
 	</queries>
 </nta>
