@@ -28,8 +28,8 @@ document) and the queries ran for model verification. *Note: queries for
 expected values take a moderately long time to run (several minutes)*.
 
 The source code and all the assets for the final report (built using
-[Pandoc][pandoc] and `pdflatex`) can be found in the `report/` folder. Building
-is done through `docker-compose`:
+[Pandoc][pandoc] and `pdflatex`) can be found in the [`report/`](report) folder.
+Building is done through `docker-compose`:
 
 	docker-compose run --rm build
 
@@ -53,6 +53,8 @@ install the needed dependencies through Pip (requires Python >= 3.6):
 Then simply run the `sim.py` script from inside the `src/simulation` folder; the
 output will be in `src/simulation/out`. Run with `-h` for information about
 accepted command line options.
+
+	./sim.py --verifyta "/path/to/verifyta"
 
 **NOTE**: running these simulations takes quite some time as the number of
 different system configurations to be tested is rather large (about 2 hours
