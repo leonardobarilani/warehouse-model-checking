@@ -150,19 +150,19 @@ def run_multi(query, params, varparams, funcparams, xyz):
 	args = list(gen_args(query, params, varparams, funcparams))
 	total = len(args)
 
-	eprint(f'Query: {query}')
-	eprint(f'Uncertainty: {VERIFYTA_UNCERTAINTY}')
+	print(f'Query: {query}')
+	print(f'Uncertainty: {VERIFYTA_UNCERTAINTY}')
 
-	eprint('Fixed params:')
+	print('Fixed params:')
 	for k, v in params.items():
 		eprint(f'  - {k}: {v!r}')
 
-	eprint('Variable params:')
+	print('Variable params:')
 	for k, v in varparams.items():
 		eprint(f'  - {k}: {v!r}')
 
-	eprint('Functional params: ' + ' '.join(funcparams.keys()))
-	eprint(f'\nSpawning {N_WORKERS} workers to run {total} simulations.')
+	print('Functional params: ' + ' '.join(funcparams.keys()))
+	print(f'\nSpawning {N_WORKERS} workers to run {total} simulations.')
 
 	for res in tqdm(p.imap_unordered(run_query, args), desc='Simulating', total=total):
 		if res is None:
@@ -284,7 +284,18 @@ def main():
 	signal.signal(signal.SIGINT, handle_sigint)
 	os.makedirs(OUT_DIR, exist_ok=True)
 
-	args                 = get_args()
+	args = get_args()
+
+	if not os.path.isfile(args.verifyta):
+		eprint(f'[ERROR] verifyta executable not found at "{args.verifyta}"')
+		eprint('[ERROR] Please provide a valid path with --verifyta PATH')
+		sys.exit(1)
+
+	if not os.path.isfile(args.template_fname):
+		eprint(f'[ERROR] Template file not found at "{args.template_fname}"')
+		eprint('[ERROR] Please provide a valid path')
+		sys.exit(1)
+
 	TEMPLATE_FNAME       = args.template_fname
 	TAU                  = args.tau
 	VERIFYTA_UNCERTAINTY = str(args.epsilon)
