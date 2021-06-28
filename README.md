@@ -64,7 +64,7 @@ bound (`--tau`) decreases runtime at the cost of the accuracy of the results.
 
 ---
 
-*Copyright &copy; 2021 Lenoardo Barilani & Marco Bonelli. Licensed under the Apache License 2.0.*
+*Copyright &copy; 2021 Leonardo Barilani & Marco Bonelli. Licensed under the Apache License 2.0.*
 
 [course]: https://www4.ceda.polimi.it/manifesti/manifesti/controller/ManifestoPublic.do?EVN_DETTAGLIO_RIGA_MANIFESTO=evento&aa=2020&k_cf=225&k_corso_la=481&k_indir=T2A&codDescr=088882&lang=IT&semestre=2&idGruppo=4151&idRiga=253825
 [pandoc]: https://pandoc.org
